@@ -150,6 +150,13 @@
             cursor: pointer;
             transform: scale(1.2);
         }
+        .waste-input {
+            width: 80px;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -157,6 +164,9 @@
             }
             .panel {
                 padding: 12px;
+            }
+            .waste-input {
+                width: 60px;
             }
         }
     </style>
@@ -170,7 +180,8 @@
                 2. Clique em "Calcular Transferências"<br>
                 3. Os resultados aparecerão à direita<br>
                 4. Você pode editar a lista de players antes de calcular<br>
-                5. Clique nas linhas "transfer" para copiá-las
+                5. Adicione gastos extras (waste) no campo ao lado do balance<br>
+                6. Clique nas linhas "transfer" para copiá-las
             </div>
             <textarea id="sessionData" placeholder="Cole os dados da sessão aqui..."></textarea>
             <div class="button-container">
@@ -184,6 +195,7 @@
                         <tr>
                             <th>Player</th>
                             <th>Balance</th>
+                            <th>Waste</th>
                             <th>Ativo</th>
                         </tr>
                     </thead>
@@ -194,6 +206,7 @@
                     <h3>Adicionar Player Manualmente</h3>
                     <input type="text" id="newPlayerName" placeholder="Nome do player">
                     <input type="text" id="newPlayerBalance" placeholder="Balance (ex: 100000)">
+                    <input type="text" id="newPlayerWaste" placeholder="Waste (ex: 50000)">
                     <button onclick="addManualPlayer()">Adicionar</button>
                 </div>
             </div>
@@ -238,6 +251,7 @@
                         currentPlayer = {
                             name: trimmedLine,
                             balance: 0,
+                            waste: 0,
                             lineCount: 0,
                             active: true
                         };
@@ -286,6 +300,10 @@
                     <td>${player.name}</td>
                     <td>${formatNumber(player.balance)} gp</td>
                     <td>
+                        <input type="text" class="waste-input" value="${player.waste || 0}" 
+                            onchange="updateWaste(${index}, this.value)" placeholder="0">
+                    </td>
+                    <td>
                         <input type="checkbox" class="checkbox-active" ${player.active ? 'checked' : ''} 
                             onchange="togglePlayer(${index}, this.checked)">
                     </td>
@@ -297,6 +315,11 @@
             document.getElementById('playersTableContainer').style.display = 'block';
         }
         
+        function updateWaste(index, value) {
+            players[index].waste = cleanNumber(value) || 0;
+            calculate(); // Atualiza automaticamente o cálculo
+        }
+        
         function togglePlayer(index, isActive) {
             players[index].active = isActive;
             calculate(); // Atualiza automaticamente o cálculo
@@ -305,9 +328,11 @@
         function addManualPlayer() {
             const nameInput = document.getElementById('newPlayerName');
             const balanceInput = document.getElementById('newPlayerBalance');
+            const wasteInput = document.getElementById('newPlayerWaste');
             
             const name = nameInput.value.trim();
             const balance = cleanNumber(balanceInput.value.trim());
+            const waste = cleanNumber(wasteInput.value.trim()) || 0;
             
             if (!name) {
                 alert("Por favor, insira o nome do player");
@@ -322,11 +347,13 @@
             players.push({
                 name: name,
                 balance: balance,
+                waste: waste,
                 active: true
             });
             
             nameInput.value = '';
             balanceInput.value = '';
+            wasteInput.value = '';
             
             displayPlayersTable();
             calculate(); // Atualiza automaticamente o cálculo
@@ -342,17 +369,23 @@
                     return;
                 }
 
+                // Aplica o waste ao balance (deduz o waste do balance)
+                const playersWithWaste = activePlayers.map(p => ({
+                    ...p,
+                    adjustedBalance: p.balance - (p.waste || 0)
+                }));
+
                 // Cálculo da divisão
-                const totalBalance = activePlayers.reduce((sum, p) => sum + p.balance, 0);
+                const totalBalance = playersWithWaste.reduce((sum, p) => sum + p.adjustedBalance, 0);
                 const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
                 
                 // Pré-cálculo de débitos e créditos
-                const creditors = activePlayers.filter(p => p.balance > balancePerPerson)
-                    .map(p => ({...p, toDistribute: p.balance - balancePerPerson}))
+                const creditors = playersWithWaste.filter(p => p.adjustedBalance > balancePerPerson)
+                    .map(p => ({...p, toDistribute: p.adjustedBalance - balancePerPerson}))
                     .sort((a, b) => b.toDistribute - a.toDistribute);
                 
-                const debtors = activePlayers.filter(p => p.balance < balancePerPerson)
-                    .map(p => ({...p, toReceive: balancePerPerson - p.balance}))
+                const debtors = playersWithWaste.filter(p => p.adjustedBalance < balancePerPerson)
+                    .map(p => ({...p, toReceive: balancePerPerson - p.adjustedBalance}))
                     .sort((a, b) => b.toReceive - a.toReceive);
 
                 // Lógica de distribuição
@@ -450,8 +483,13 @@
                 });
             }
             
+            // Mostra também o total de waste (gastos extras)
+            const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
+            
             summaryContainer.innerHTML = `
-                <p><strong>Total balance:</strong> ${formatNumber(totalBalance)} gp</p>
+                <p><strong>Total balance:</strong> ${formatNumber(totalBalance + totalWaste)} gp</p>
+                <p><strong>Total waste:</strong> ${formatNumber(totalWaste)} gp</p>
+                <p><strong>Balance ajustado (com waste):</strong> ${formatNumber(totalBalance)} gp</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
                 <p><strong>Balance por pessoa:</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
