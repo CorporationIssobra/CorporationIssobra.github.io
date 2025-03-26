@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Experiência - Corporation</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --primary-hover: #1b5e20;
+            --secondary-color: #1565c0;
+            --background: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-light: #666666;
+            --border-color: #e0e0e0;
+            --green-stamina: #e8f5e9;
+            --orange-stamina: #fff3e0;
+            --xp-summary-bg: #e3f2fd;
+            --success-color: #388e3c;
+            --warning-color: #ffa000;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            background-color: var(--background);
+            color: var(--text-color);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.4;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin: 10px 0 15px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow);
+            border-radius: 8px;
+            flex: 1;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-group-small {
+            flex: 0.5;
+            min-width: 120px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+        }
+        
+        .percentage-input {
+            display: flex;
+            align-items: center;
+        }
+        
+        .percentage-input input {
+            width: 70px;
+            text-align: right;
+        }
+        
+        .percentage-input span {
+            margin-left: 5px;
+            font-size: 14px;
+        }
+        
+        .hour-group {
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: var(--green-stamina);
+            border-left: 3px solid var(--success-color);
+        }
+        
+        .hour-group.orange {
+            background-color: var(--orange-stamina);
+            border-left: 3px solid var(--warning-color);
+        }
+        
+        .hour-group label {
+            font-weight: 600;
+            min-width: 60px;
+        }
+        
+        .stamina-options {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stamina-option {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .stamina-option input[type="radio"] {
+            margin-right: 5px;
+        }
+        
+        .boost-checkbox {
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .boost-checkbox input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .result {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .double-xp-section {
+            display: relative;
+            align-items: center;
+        }
+        
+        #hourSelection {
+            margin-top: 15px;
+        }
+        
+        .xp-summary {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: var(--xp-summary-bg);
+            border-radius: 6px;
+            border-left: 3px solid var(--secondary-color);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .form-group, .form-group-small {
+                flex: 1;
+                min-width: 100%;
+            }
+            
+            .hour-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .stamina-options {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .boost-checkbox {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            button, .double-xp-section {
+                width: 25%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Cálculo de Experiência - Corporation</h1>
+    <div class="container">
+        <div id="loadingMessage" class="loading">Carregando tabela de experiência...</div>
+        
+        <div id="formContent" style="display: none;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="currentLevel">Nível Atual:</label>
+                    <input type="number" id="currentLevel" min="1" value="1">
+                </div>
+                <div class="form-group-small">
+                    <label for="currentPercent">Progresso:</label>
+                    <div class="percentage-input">
+                        <input type="number" id="currentPercent" min="0" max="100" value="0">
+                        <span>%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="targetLevel">Nível Alvo:</label>
+                    <input type="number" id="targetLevel" min="1" value="100">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="rawExperience">Experiência RAW/h:</label>
+                    <input type="text" id="rawExperience" value="1.000.000">
+                </div>
+                <div class="form-group">
+                    <label for="numHours">Horas por dia:</label>
+                    <select id="numHours">
+                        <option value="1">1 hora</option>
+                        <option value="2">2 horas</option>
+                        <option value="3">3 horas</option>
+                        <option value="4">4 horas</option>
+                        <option value="5">5 horas</option>
+                        <option value="6">6 horas</option>
+                        <option value="7">7 horas</option>
+                        <option value="8">8 horas</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="hourSelection"></div>
+            
+            <div class="action-buttons">
+                <div class="double-xp-section">
+                    <input type="checkbox" id="doubleExperience">
+                    <label for="doubleExperience">Evento Double XP</label>
+                </div>
+                <button id="calculateButton">Calcular</button>
+            </div>
+            
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        const experienceTable = {};
+        
+        const loadExperienceTable = async () => {
+            try {
+                const response = await fetch('xpt2.txt');
+                const data = await response.text();
+                
+                const pairs = data.split(', ');
+                pairs.forEach(pair => {
+                    const [level, exp] = pair.split(': ');
+                    experienceTable[level.trim()] = parseInt(exp.trim());
+                });
+                
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('formContent').style.display = 'block';
+            } catch (error) {
+                document.getElementById('loadingMessage').innerHTML = 
+                    'Erro ao carregar a tabela de experiência. Verifique se o arquivo xpt2.txt está no local correto.';
+            }
+        };
+        
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        function parseFormattedNumber(str) {
+            return parseInt(str.replace(/\./g, '')) || 0;
+        }
+        
+        function decimalToHoursMinutes(decimalHours) {
+            const hours = Math.floor(decimalHours);
+            const minutes = Math.round((decimalHours - hours) * 60);
+            
+            if (minutes === 0) return `${hours} hora${hours !== 1 ? 's' : ''}`;
+            if (hours === 0) return `${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+            return `${hours} hora${hours !== 1 ? 's' : ''} e ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+        }
+        
+        function formatDate(date) {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        window.addEventListener('DOMContentLoaded', loadExperienceTable);
+        
+        const calculateExperience = () => {
+            const currentLevel = parseInt(document.getElementById('currentLevel').value);
+            const currentPercent = parseFloat(document.getElementById('currentPercent').value);
+            const targetLevel = parseInt(document.getElementById('targetLevel').value);
+            const rawExperience = parseFormattedNumber(document.getElementById('rawExperience').value);
+            const doubleXP = document.getElementById('doubleExperience').checked;
+            const numHours = parseInt(document.getElementById('numHours').value);
+            
+            let currentXP = experienceTable[currentLevel] || 0;
+            let targetXP = experienceTable[targetLevel] || 0;
+            
+            if (targetXP <= currentXP) {
+                document.getElementById('result').innerHTML = "<div style='color: #d32f2f; padding: 8px; background-color: #ffebee; border-radius: 4px; font-size: 14px;'>O nível alvo precisa ser maior que o nível atual!</div>";
+                return;
+            }
+            
+            // Ajusta a experiência atual baseada na porcentagem informada
+            if (currentPercent > 0) {
+                const nextLevelXP = experienceTable[currentLevel + 1] || experienceTable[currentLevel];
+                const levelRange = nextLevelXP - currentXP;
+                currentXP += (levelRange * currentPercent) / 100;
+            }
+            
+            let totalXPRequired = targetXP - currentXP;
+            
+            const calculateHourXP = (stamina, boost) => {
+                let multipliers = {
+                    stamina: stamina === 'green' ? 1.5 : 1,
+                    boost: boost ? 1.5 : 1,
+                    doubleXP: doubleXP ? 2 : 1
+                };
+                return rawExperience * multipliers.stamina * multipliers.boost * multipliers.doubleXP;
+            };
+            
+            let totalXPPerDay = 0;
+            let hourDetails = [];
+            
+            for (let i = 1; i <= numHours; i++) {
+                const stamina = document.querySelector(`input[name="stamina${i}"]:checked`).value;
+                const boost = document.getElementById(`boost${i}`).checked;
+                const xpPerHour = calculateHourXP(stamina, boost);
+                
+                hourDetails.push({ hour: i, stamina, boost, xpPerHour });
+                totalXPPerDay += xpPerHour;
+            }
+            
+            let totalDays = Math.floor(totalXPRequired / totalXPPerDay);
+            let remainingXP = totalXPRequired % totalXPPerDay;
+            let remainingHours = remainingXP / (totalXPPerDay / numHours);
+            
+            const today = new Date();
+            const targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + totalDays);
+            
+            let timeEstimation = '';
+            if (totalDays > 0) {
+                timeEstimation += `${totalDays} dia${totalDays !== 1 ? 's' : ''}`;
+                if (remainingHours > 0) timeEstimation += ` e ${decimalToHoursMinutes(remainingHours)}`;
+            } else {
+                timeEstimation = decimalToHoursMinutes(remainingHours);
+            }
+            
+            let resultText = `
+                <div class="xp-summary">
+                    <strong>Experiência atual:</strong> ${formatNumber(Math.floor(currentXP))} (${currentPercent}% do nível ${currentLevel})<br>
+                    <strong>Experiência necessária:</strong> ${formatNumber(Math.floor(totalXPRequired))}<br>
+                    <strong>Experiência por dia:</strong> ${formatNumber(Math.floor(totalXPPerDay))}<br>
+                    <strong>Data estimada:</strong> ${formatDate(targetDate)} (${timeEstimation})
+                </div>
+                <strong>Detalhes por hora:</strong><br>
+                <div style="margin-top: 8px;">
+            `;
+            
+            hourDetails.forEach(detail => {
+                resultText += `
+                    <div style="margin-bottom: 6px; padding: 6px; background-color: ${detail.stamina === 'green' ? 'var(--green-stamina)' : 'var(--orange-stamina)'}; border-radius: 4px; font-size: 13px;">
+                        Hora ${detail.hour}: 
+                        Stamina: <span style="font-weight: 600; color: ${detail.stamina === 'green' ? 'var(--success-color)' : 'var(--warning-color)'}">${detail.stamina === 'green' ? 'Verde' : 'Laranja'}</span>, 
+                        Boost: <span style="font-weight: 600;">${detail.boost ? 'Sim' : 'Não'}</span>, 
+                        XP/h: <span style="font-weight: 600;">${formatNumber(detail.xpPerHour)}</span>
+                    </div>
+                `;
+            });
+            
+            resultText += `</div>`;
+            document.getElementById('result').innerHTML = resultText;
+        };
+        
+        const hourSelection = () => {
+            let hourSelectionHTML = '';
+            let numHours = document.getElementById('numHours').value;
+
+            for (let i = 1; i <= numHours; i++) {
+                hourSelectionHTML += `
+                    <div class="hour-group green" id="hourGroup${i}">
+                        <label>Hora ${i}:</label>
+                        <div class="stamina-options">
+                            <div class="stamina-option">
+                                <input type="radio" id="staminaGreen${i}" name="stamina${i}" value="green" checked 
+                                       onchange="document.getElementById('hourGroup${i}').className = 'hour-group green'">
+                                <label for="staminaGreen${i}">Verde</label>
+                            </div>
+                            <div class="stamina-option">
+                                <input type="radio" id="staminaOrange${i}" name="stamina${i}" value="orange" 
+                                       onchange="document.getElementById('hourGroup${i}').className = 'hour-group orange'">
+                                <label for="staminaOrange${i}">Laranja</label>
+                            </div>
+                            <div class="boost-checkbox">
+                                <input type="checkbox" id="boost${i}">
+                                <label for="boost${i}">Boost</label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('hourSelection').innerHTML = hourSelectionHTML;
+        };
+        
+        const setupEventListeners = () => {
+            document.getElementById('calculateButton').addEventListener('click', calculateExperience);
+            document.getElementById('numHours').addEventListener('change', hourSelection);
+            
+            document.getElementById('rawExperience').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\./g, '');
+                if (!isNaN(value)) e.target.value = formatNumber(parseInt(value));
+            });
+            
+            // Validação para o campo de porcentagem
+            document.getElementById('currentPercent').addEventListener('input', function(e) {
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) value = 0;
+                if (value < 0) value = 0;
+                if (value > 100) value = 100;
+                e.target.value = value;
+            });
+            
+            hourSelection();
+        };
+        
+        const observer = new MutationObserver((mutations) => {
+            if (document.getElementById('formContent').style.display === 'block') {
+                setupEventListeners();
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.getElementById('formContent'), {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+    </script>
+</body>
+</html>
