@@ -21,6 +21,8 @@
             --warning-color: #ffa000;
             --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             --transition: all 0.2s ease;
+            --event30-color: #7b1fa2;
+            --event50-color: #c2185b;
         }
 
         * {
@@ -165,10 +167,6 @@
             font-size: 14px;
         }
         
-        .boost-checkbox input[type="checkbox"] {
-            margin-right: 5px;
-        }
-        
         .loading {
             text-align: center;
             padding: 20px;
@@ -181,6 +179,7 @@
             gap: 10px;
             align-items: center;
             margin: 15px 0;
+            justify-content: space-between;
         }
         
         button {
@@ -192,8 +191,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            flex: 1;
-            min-width: 150px;
+            min-width: 120px;
         }
         
         button:hover {
@@ -209,9 +207,33 @@
             font-size: 14px;
         }
         
-        .double-xp-section {
-            display: relative;
+        .event-options {
+            display: flex;
+            flex-wrap: wrap;
             align-items: center;
+            gap: 10px;
+        }
+        
+        .event-checkbox {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .double-xp-checkbox {
+            color: var(--primary-color);
+        }
+        
+        .event30-checkbox {
+            color: var(--event30-color);
+        }
+        
+        .event50-checkbox {
+            color: var(--event50-color);
+        }
+        
+        .event-checkbox input[type="checkbox"] {
+            margin-right: 5px;
         }
         
         #hourSelection {
@@ -225,6 +247,16 @@
             border-radius: 6px;
             border-left: 3px solid var(--secondary-color);
             font-size: 14px;
+        }
+
+        .xp-percentage {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+            padding: 4px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            font-weight: 600;
         }
 
         @media (max-width: 768px) {
@@ -266,10 +298,16 @@
             
             .action-buttons {
                 flex-direction: column;
+                gap: 8px;
             }
             
-            button, .double-xp-section {
-                width: 25%;
+            .event-options {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            button {
+                width: 100%;
             }
         }
     </style>
@@ -321,9 +359,19 @@
             <div id="hourSelection"></div>
             
             <div class="action-buttons">
-                <div class="double-xp-section">
-                    <input type="checkbox" id="doubleExperience">
-                    <label for="doubleExperience">Evento Double XP</label>
+                <div class="event-options">
+                    <div class="event-checkbox double-xp-checkbox">
+                        <input type="checkbox" id="doubleExperience">
+                        <label for="doubleExperience">Double XP</label>
+                    </div>
+                    <div class="event-checkbox event30-checkbox">
+                        <input type="checkbox" id="event30">
+                        <label for="event30">Evento 30%</label>
+                    </div>
+                    <div class="event-checkbox event50-checkbox">
+                        <input type="checkbox" id="event50">
+                        <label for="event50">Evento 50%</label>
+                    </div>
                 </div>
                 <button id="calculateButton">Calcular</button>
             </div>
@@ -386,6 +434,8 @@
             const targetLevel = parseInt(document.getElementById('targetLevel').value);
             const rawExperience = parseFormattedNumber(document.getElementById('rawExperience').value);
             const doubleXP = document.getElementById('doubleExperience').checked;
+            const event30 = document.getElementById('event30').checked;
+            const event50 = document.getElementById('event50').checked;
             const numHours = parseInt(document.getElementById('numHours').value);
             
             let currentXP = experienceTable[currentLevel] || 0;
@@ -409,9 +459,44 @@
                 let multipliers = {
                     stamina: stamina === 'green' ? 1.5 : 1,
                     boost: boost ? 1.5 : 1,
+                    event30: event30 ? 1.3 : 1,
+                    event50: event50 ? 1.5 : 1,
                     doubleXP: doubleXP ? 2 : 1
                 };
-                return rawExperience * multipliers.stamina * multipliers.boost * multipliers.doubleXP;
+                
+                // Calcula a porcentagem total como no jogo
+                let percentage = 100;
+                let percentageSteps = ["100% (Base)"];
+                
+                if (multipliers.stamina !== 1) {
+                    percentage = percentage * multipliers.stamina;
+                    percentageSteps.push(`${Math.round(percentage)}% (Stamina ${stamina === 'green' ? 'Verde' : 'Laranja'})`);
+                }
+                if (multipliers.boost !== 1) {
+                    percentage = percentage * multipliers.boost;
+                    percentageSteps.push(`${Math.round(percentage)}% (Boost)`);
+                }
+                if (multipliers.event30 !== 1) {
+                    percentage = percentage * multipliers.event30;
+                    percentageSteps.push(`${Math.round(percentage)}% (Evento 30%)`);
+                }
+                if (multipliers.event50 !== 1) {
+                    percentage = percentage * multipliers.event50;
+                    percentageSteps.push(`${Math.round(percentage)}% (Evento 50%)`);
+                }
+                if (multipliers.doubleXP !== 1) {
+                    percentage = percentage * multipliers.doubleXP;
+                    percentageSteps.push(`${Math.round(percentage)}% (Double XP)`);
+                }
+                
+                const totalXP = rawExperience * (percentage / 100);
+                const percentageText = percentageSteps.join(' → ');
+                
+                return {
+                    total: totalXP,
+                    percentage: percentageText,
+                    finalPercentage: Math.round(percentage)
+                };
             };
             
             let totalXPPerDay = 0;
@@ -420,10 +505,17 @@
             for (let i = 1; i <= numHours; i++) {
                 const stamina = document.querySelector(`input[name="stamina${i}"]:checked`).value;
                 const boost = document.getElementById(`boost${i}`).checked;
-                const xpPerHour = calculateHourXP(stamina, boost);
+                const xpCalc = calculateHourXP(stamina, boost);
                 
-                hourDetails.push({ hour: i, stamina, boost, xpPerHour });
-                totalXPPerDay += xpPerHour;
+                hourDetails.push({ 
+                    hour: i, 
+                    stamina, 
+                    boost, 
+                    xpPerHour: xpCalc.total,
+                    percentage: xpCalc.percentage,
+                    finalPercentage: xpCalc.finalPercentage
+                });
+                totalXPPerDay += xpCalc.total;
             }
             
             let totalDays = Math.floor(totalXPRequired / totalXPPerDay);
@@ -456,10 +548,17 @@
             hourDetails.forEach(detail => {
                 resultText += `
                     <div style="margin-bottom: 6px; padding: 6px; background-color: ${detail.stamina === 'green' ? 'var(--green-stamina)' : 'var(--orange-stamina)'}; border-radius: 4px; font-size: 13px;">
-                        Hora ${detail.hour}: 
-                        Stamina: <span style="font-weight: 600; color: ${detail.stamina === 'green' ? 'var(--success-color)' : 'var(--warning-color)'}">${detail.stamina === 'green' ? 'Verde' : 'Laranja'}</span>, 
-                        Boost: <span style="font-weight: 600;">${detail.boost ? 'Sim' : 'Não'}</span>, 
-                        XP/h: <span style="font-weight: 600;">${formatNumber(detail.xpPerHour)}</span>
+                        <div style="margin-bottom: 4px;">
+                            <strong>Hora ${detail.hour}:</strong> 
+                            Stamina: <span style="font-weight: 600; color: ${detail.stamina === 'green' ? 'var(--success-color)' : 'var(--warning-color)'}">${detail.stamina === 'green' ? 'Verde' : 'Laranja'}</span> | 
+                            Boost: <span style="font-weight: 600;">${detail.boost ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="xp-percentage">
+                            ${detail.percentage}
+                        </div>
+                        <div style="font-weight: 600; margin-top: 4px;">
+                            XP/h: ${formatNumber(detail.xpPerHour)} (${detail.finalPercentage}%)
+                        </div>
                     </div>
                 `;
             });
