@@ -11,13 +11,13 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #333;
             text-align: center;
+            background-color: #333;
         }
 
         /* Estilo do banner */
         #banner {
-            background-color: #6043c9;
+            background-color: #4CAF50;
             color: white;
             text-align: center;
             padding: 20px;
@@ -50,9 +50,9 @@
         .iframe-container {
             position: relative;
             width: 100vw; /* O iframe ocupará no máximo 90% da largura da tela */
-            height: 75vh; /* O iframe ocupará no máximo 70% da altura da tela */
+            height: 100vh; /* O iframe ocupará no máximo 70% da altura da tela */
             margin: 0 auto;
-            border: 5px solid #6043c9;
+            border: 5px solid #4CAF50;
             border-radius: 10px;
             overflow: hidden;
         }
@@ -104,7 +104,7 @@
 
     <!-- Contêiner responsivo para o iframe -->
     <div class="iframe-container">
-        <iframe id="planilhaIframe" src="https://docs.google.com/spreadsheets/d/1pGII7xxtCMuxY-9zRThcsKr5dL9ipxjK2EEbaw7DeGU/preview" allowfullscreen></iframe>
+        <iframe id="planilhaIframe" src="splitloot.html" allowfullscreen></iframe>
     </div>
 
     <script>
@@ -116,7 +116,7 @@
             const iframe = document.getElementById("planilhaIframe");
 
             // URL base para o Google Sheets
-            const baseURL = "https://docs.google.com/spreadsheets/d/1pGII7xxtCMuxY-9zRThcsKr5dL9ipxjK2EEbaw7DeGU/preview";
+            const baseURL = "https://docs.google.com/spreadsheets/d/1ijzXcGMG1Ed7rrJHKMLp4GvvjZZvTVo-X2xTX5eb7kk/preview";
             
             // Modificando a URL com o termo de pesquisa, se houver
             if (pesquisaTermo) {

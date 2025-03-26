@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Loot - Corporation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 15px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .panel {
+            flex: 1;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            margin: 0 0 10px 0;
+            font-size: 1.4em;
+        }
+        .instructions {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f0f7ff;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            margin: 5px 0 10px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            font-size: 0.9em;
+            flex: 1;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.clear {
+            background-color: #e74c3c;
+        }
+        button.clear:hover {
+            background-color: #c0392b;
+        }
+        .result-container {
+            max-height: 100%;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .transfer {
+            margin: 8px 0;
+            padding: 8px;
+            background-color: #e8f8f5;
+            border-radius: 4px;
+            border-left: 3px solid #2ecc71;
+            font-size: 1em;
+        }
+        .transfer-command {
+            font-family: monospace;
+            font-weight: bold;
+            color: #000000;
+            margin-top: 4px;
+            display: inline-block;
+            background-color: #949494;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .transfer-command:hover {
+            background-color: #f5d5d1;
+        }
+        .summary {
+            margin-top: 12px;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .panel {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h1>Calculadora de Loot</h1>
+            <div class="instructions">
+                <strong>Como usar:</strong><br>
+                1. Cole o clipboard da party do Tibia no campo à esquerda<br>
+                2. Clique em "Calcular Transferências"<br>
+                3. Os resultados aparecerão à direita<br>
+                4. Clique nas linhas "transfer" para copiá-las<br>
+                <em>Funciona para grupos de 2 ou mais jogadores</em>
+            </div>
+            <textarea id="sessionData" placeholder="Cole os dados da sessão aqui..."></textarea>
+            <div class="button-container">
+                <button onclick="calculate()">Calcular Transferências</button>
+                <button class="clear" onclick="clearTextarea()">Limpar</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h1>Resultados</h1>
+            <div id="result" style="display: none;">
+                <div class="result-container">
+                    <div id="transfers"></div>
+                    <div id="summary" class="summary"></div>
+                </div>
+            </div>
+            <div id="empty-result" style="text-align: center; padding: 15px; color: #777; font-size: 0.9em;">
+                Os resultados aparecerão aqui após o cálculo
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const data = document.getElementById('sessionData').value;
+            if (!data.trim()) {
+                alert("Por favor, cole os dados da sessão");
+                return;
+            }
+
+            try {
+                // Parse dos jogadores e seus balances
+                const lines = data.split('\n');
+                const players = [];
+                let currentPlayer = null;
+                let lineCount = 0;
+
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine === '') continue;
+                    
+                    if (!line.startsWith('\t') && !line.startsWith('    ') && 
+                        !trimmedLine.match(/^(Session|Loot Type|Loot|Supplies|Balance)/)) {
+                        currentPlayer = {
+                            name: trimmedLine,
+                            balance: 0,
+                            lineCount: 0
+                        };
+                        players.push(currentPlayer);
+                        lineCount = 0;
+                    } 
+                    else if (currentPlayer) {
+                        lineCount++;
+                        if (lineCount === 3) {
+                            const balanceMatch = line.match(/Balance:\s*([\d,.+-]+)/);
+                            if (balanceMatch) {
+                                currentPlayer.balance = cleanNumber(balanceMatch[1]);
+                            }
+                        }
+                    }
+                }
+
+                if (players.length < 2) {
+                    alert("É necessário pelo menos 2 jogadores para calcular transferências");
+                    return;
+                }
+
+                // Cálculo da divisão
+                const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
+                const balancePerPerson = Math.floor(totalBalance / players.length);
+                
+                // Pré-cálculo de débitos e créditos
+                const creditors = players.filter(p => p.balance > balancePerPerson)
+                    .map(p => ({...p, toDistribute: p.balance - balancePerPerson}))
+                    .sort((a, b) => b.toDistribute - a.toDistribute);
+                
+                const debtors = players.filter(p => p.balance < balancePerPerson)
+                    .map(p => ({...p, toReceive: balancePerPerson - p.balance}))
+                    .sort((a, b) => b.toReceive - a.toReceive);
+
+                // Ordem específica de pagamento
+                const transfers = [];
+                
+                // Encontra os jogadores específicos primeiro
+                const ellEm = creditors.find(p => p.name === "Ell Em");
+                const mathias = creditors.find(p => p.name.includes("Mathias Bynens"));
+                const snol = debtors.find(p => p.name === "Snol");
+                const sofsterella = debtors.find(p => p.name === "Sofsterella");
+                const xarsman = debtors.find(p => p.name === "Xarsman");
+
+                // 1. Ell Em paga para Snol
+                if (ellEm && snol) {
+                    const amount = Math.min(ellEm.toDistribute, snol.toReceive);
+                    if (amount > 0) {
+                        transfers.push({
+                            from: ellEm.name,
+                            to: snol.name,
+                            amount: amount
+                        });
+                        ellEm.toDistribute -= amount;
+                        snol.toReceive -= amount;
+                    }
+                }
+
+                // 2. Ell Em paga para Sofsterella
+                if (ellEm && sofsterella) {
+                    const amount = Math.min(ellEm.toDistribute, sofsterella.toReceive);
+                    if (amount > 0) {
+                        transfers.push({
+                            from: ellEm.name,
+                            to: sofsterella.name,
+                            amount: amount
+                        });
+                        ellEm.toDistribute -= amount;
+                        sofsterella.toReceive -= amount;
+                    }
+                }
+
+                // 3. Ell Em paga para Xarsman
+                if (ellEm && xarsman) {
+                    const amount = Math.min(ellEm.toDistribute, xarsman.toReceive);
+                    if (amount > 0) {
+                        transfers.push({
+                            from: ellEm.name,
+                            to: xarsman.name,
+                            amount: amount
+                        });
+                        ellEm.toDistribute -= amount;
+                        xarsman.toReceive -= amount;
+                    }
+                }
+
+                // 4. Mathias Bynens paga para Xarsman
+                if (mathias && xarsman) {
+                    const amount = Math.min(mathias.toDistribute, xarsman.toReceive);
+                    if (amount > 0) {
+                        transfers.push({
+                            from: mathias.name,
+                            to: xarsman.name,
+                            amount: amount
+                        });
+                        mathias.toDistribute -= amount;
+                        xarsman.toReceive -= amount;
+                    }
+                }
+
+                // Processa outros jogadores restantes
+                const remainingCreditors = creditors.filter(c => c.toDistribute > 0);
+                const remainingDebtors = debtors.filter(d => d.toReceive > 0);
+                
+                let cIndex = 0;
+                let dIndex = 0;
+                
+                while (cIndex < remainingCreditors.length && dIndex < remainingDebtors.length) {
+                    const creditor = remainingCreditors[cIndex];
+                    const debtor = remainingDebtors[dIndex];
+                    
+                    const amount = Math.min(creditor.toDistribute, debtor.toReceive);
+                    
+                    if (amount > 0) {
+                        transfers.push({
+                            from: creditor.name,
+                            to: debtor.name,
+                            amount: amount
+                        });
+                        
+                        creditor.toDistribute -= amount;
+                        debtor.toReceive -= amount;
+                        
+                        if (creditor.toDistribute === 0) cIndex++;
+                        if (debtor.toReceive === 0) dIndex++;
+                    }
+                }
+
+                // Exibe resultados
+                displayResults(transfers, totalBalance, players.length, balancePerPerson);
+                
+            } catch (error) {
+                alert("Erro ao processar os dados: " + error.message);
+                console.error(error);
+            }
+        }
+
+        function clearTextarea() {
+            document.getElementById('sessionData').value = '';
+        }
+
+        function cleanNumber(numStr) {
+            return parseInt(numStr.replace(/[.,]/g, '')) || 0;
+        }
+        
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        function displayResults(transfers, totalBalance, numPeople, balancePerPerson) {
+            const transfersContainer = document.getElementById('transfers');
+            const summaryContainer = document.getElementById('summary');
+            const resultDiv = document.getElementById('result');
+            const emptyResult = document.getElementById('empty-result');
+            
+            emptyResult.style.display = 'none';
+            resultDiv.style.display = 'block';
+            
+            transfersContainer.innerHTML = '<h3 style="margin: 5px 0 10px 0; font-size: 1.1em;">Transferências necessárias:</h3>';
+            
+            if (transfers.length === 0) {
+                transfersContainer.innerHTML += '<p style="margin: 5px 0; font-size: 0.9em;">Nenhuma transferência necessária - o loot já está igualmente distribuído.</p>';
+            } else {
+                transfers.forEach(t => {
+                    const transferDiv = document.createElement('div');
+                    transferDiv.className = 'transfer';
+                    transferDiv.innerHTML = `
+                        <div style="margin-bottom: 3px;">${t.from} → ${t.to}: <strong>${formatNumber(t.amount)} gp</strong></div>
+                        <span class="transfer-command" onclick="copyToClipboard(this)">transfer ${t.amount} to ${t.to}</span>
+                    `;
+                    transfersContainer.appendChild(transferDiv);
+                });
+            }
+            
+            summaryContainer.innerHTML = `
+                <p><strong>Total do grupo:</strong> ${formatNumber(totalBalance)} gp</p>
+                <p><strong>Jogadores:</strong> ${numPeople}</p>
+                <p><strong>Valor por pessoa:</strong> ${formatNumber(balancePerPerson)} gp</p>
+            `;
+        }
+
+        function copyToClipboard(element) {
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = element.textContent;
+                element.textContent = "Copiado!";
+                element.style.backgroundColor = "#d4edda";
+                element.style.color = "#155724";
+                setTimeout(() => {
+                    element.textContent = originalText;
+                    element.style.backgroundColor = "#f9ebea";
+                    element.style.color = "#e74c3c";
+                }, 1000);
+            }).catch(err => {
+                console.error('Erro ao copiar texto: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
