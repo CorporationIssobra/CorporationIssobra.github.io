@@ -168,6 +168,17 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .new-player-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .new-player-inputs input {
+            flex: 1;
+            min-width: 0;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -178,6 +189,59 @@
             }
             .profit-input, .waste-input {
                 width: 60px;
+                font-size: 0.8em;
+                padding: 3px;
+                margin-left: 3px;
+            }
+            .players-table th, .players-table td {
+                padding: 6px 4px;
+                font-size: 0.8em;
+            }
+            .add-player-form input {
+                width: 60px !important;
+                margin-bottom: 5px;
+                font-size: 0.8em;
+            }
+            .add-player-form {
+                padding: 0px;
+            }
+            .add-player-form button {
+                padding: 6px 8px;
+                font-size: 0.8em;
+            }
+            .transfer-command {
+                font-size: 0.9em;
+                word-break: break-all;
+                white-space: normal;
+            }
+            .transfer {
+                font-size: 0.9em;
+            }
+            .player-name {
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profit-input, .waste-input {
+                width: 30px;
+            }
+            .players-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .add-player-form input {
+                width: 50px !important;
+            }
+            .new-player-inputs input {
+                flex: 1 1 calc(50% - 5px);
+            }
+            .player-name {
+                max-width: 60px;
             }
         }
     </style>
@@ -216,10 +280,12 @@
                 
                 <div class="add-player-form">
                     <h3>Adicionar Player Manualmente</h3>
-                    <input type="text" id="newPlayerName" placeholder="Nome" style="width: 100px;">
-                    <input type="text" id="newPlayerBalance" placeholder="Balance" style="width: 80px;" oninput="formatInputNumber(this)">    
-                    <input type="text" id="newPlayerProfit" placeholder="Profit" class="profit-input" oninput="formatInputNumber(this)">
-                    <input type="text" id="newPlayerWaste" placeholder="Waste" class="waste-input" oninput="formatInputNumber(this)">
+                    <div class="new-player-inputs">
+                        <input type="text" id="newPlayerName" placeholder="Nome">
+                        <input type="text" id="newPlayerBalance" placeholder="Balance">    
+                        <input type="text" id="newPlayerProfit" placeholder="Profit" class="profit-input">
+                        <input type="text" id="newPlayerWaste" placeholder="Waste" class="waste-input">
+                    </div>
                     <button onclick="addManualPlayer()">Add</button>
                 </div>
             </div>
@@ -240,18 +306,8 @@
 
     <script>
         let players = [];
-        
-        function formatInputNumber(input) {
-            // Remove todos os caracteres não numéricos
-            let value = input.value.replace(/[^\d]/g, '');
-            
-            // Converte para número
-            const num = parseInt(value || 0);
-            
-            // Formata com pontos
-            input.value = formatNumber(num);
-            
-            return num;
+        function abbreviateName(name, maxLength = 20) {
+            return name.length > maxLength ? name.substring(0, maxLength-1) + '.' : name;
         }
         
         function parseData() {
@@ -317,22 +373,28 @@
             const tableBody = document.getElementById('playersTableBody');
             tableBody.innerHTML = '';
             
+            // Verifica se é uma tela pequena
+            const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
+            
             players.forEach((player, index) => {
                 const row = document.createElement('tr');
                 if (!player.active) {
                     row.classList.add('disabled-player');
                 }
                 
+                // Aplica abreviação apenas na tabela de players
+                const displayName = isSmallScreen ? abbreviateName(player.name) : player.name;
+                
                 row.innerHTML = `
-                    <td>${player.name}</td>
+                    <td class="player-name" title="${player.name}">${displayName}</td>
                     <td>${formatNumber(player.balance)} gp</td>
                     <td>
-                        <input type="text" class="profit-input" value="${formatNumber(player.profit || 0)}" 
-                            oninput="formatInputNumber(this)" onchange="updateProfit(${index}, this.value)" placeholder="0">
+                        <input type="text" class="profit-input" value="${player.profit || 0}" 
+                            onchange="updateProfit(${index}, this.value)" placeholder="0">
                     </td>
                     <td>
-                        <input type="text" class="waste-input" value="${formatNumber(player.waste || 0)}" 
-                            oninput="formatInputNumber(this)" onchange="updateWaste(${index}, this.value)" placeholder="0">
+                        <input type="text" class="waste-input" value="${player.waste || 0}" 
+                            onchange="updateWaste(${index}, this.value)" placeholder="0">
                     </td>
                     <td>
                         <input type="checkbox" class="checkbox-active" ${player.active ? 'checked' : ''} 
@@ -348,16 +410,12 @@
         
         function updateProfit(index, value) {
             players[index].profit = cleanNumber(value) || 0;
-            calculate();
-            // Atualiza o campo com o valor formatado
-            document.querySelectorAll('.profit-input')[index].value = formatNumber(players[index].profit);
+            calculate(); // Atualiza automaticamente o cálculo
         }
         
         function updateWaste(index, value) {
             players[index].waste = cleanNumber(value) || 0;
-            calculate();
-            // Atualiza o campo com o valor formatado
-            document.querySelectorAll('.waste-input')[index].value = formatNumber(players[index].waste);
+            calculate(); // Atualiza automaticamente o cálculo
         }
         
         function togglePlayer(index, isActive) {
@@ -557,6 +615,13 @@
                 console.error('Erro ao copiar texto: ', err);
             });
         }
+
+        // Atualiza a tabela quando a tela for redimensionada
+        window.addEventListener('resize', function() {
+            if (document.getElementById('playersTableContainer').style.display !== 'none') {
+                displayPlayersTable();
+            }
+        });
     </script>
 </body>
 </html>

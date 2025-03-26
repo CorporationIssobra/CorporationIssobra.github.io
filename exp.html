@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cálculo de Experiência - Corporation</title>
     <style>
         :root {
@@ -34,24 +34,26 @@
         html, body {
             height: 100%;
             width: 100%;
+            -webkit-text-size-adjust: 100%;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 10px;
+            padding: 8px;
             background-color: var(--background);
             color: var(--text-color);
             min-height: 100%;
             display: flex;
             flex-direction: column;
             line-height: 1.4;
+            font-size: 14px;
         }
         
         h1 {
             text-align: center;
             color: var(--primary-color);
-            margin: 10px 0 15px;
-            font-size: 1.8rem;
+            margin: 8px 0 12px;
+            font-size: 1.5rem;
             font-weight: 600;
         }
         
@@ -59,41 +61,41 @@
             max-width: 800px;
             width: 100%;
             margin: 0 auto;
-            padding: 15px;
+            padding: 12px;
             background-color: var(--card-bg);
             box-shadow: var(--shadow);
-            border-radius: 8px;
+            border-radius: 6px;
             flex: 1;
         }
         
         .form-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
         
         .form-group {
-            flex: 1;
-            min-width: 200px;
+            flex: 1 1 100%;
+            min-width: 0;
         }
         
         .form-group-small {
-            flex: 0.5;
-            min-width: 120px;
+            flex: 1 1 100%;
+            min-width: 0;
         }
         
         label {
             display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
+            font-size: 13px;
+            margin-bottom: 4px;
             font-weight: 600;
             color: var(--text-color);
         }
         
         input, select {
             width: 100%;
-            padding: 8px 10px;
+            padding: 8px;
             font-size: 14px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -122,11 +124,7 @@
         }
         
         .hour-group {
-            margin-bottom: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 8px;
             padding: 10px;
             border-radius: 6px;
             background-color: var(--green-stamina);
@@ -140,50 +138,60 @@
         
         .hour-group label {
             font-weight: 600;
-            min-width: 60px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: block;
         }
         
         .stamina-options {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            width: 100%;
         }
         
         .stamina-option {
             display: flex;
             align-items: center;
-            font-size: 14px;
+            font-size: 13px;
+            white-space: nowrap;
         }
         
         .stamina-option input[type="radio"] {
-            margin-right: 5px;
+            margin-right: 6px;
+            min-width: 16px;
+            min-height: 16px;
         }
         
         .boost-checkbox {
-            margin-left: 15px;
             display: flex;
             align-items: center;
-            font-size: 14px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        .boost-checkbox input[type="checkbox"] {
+            margin-right: 6px;
+            min-width: 16px;
+            min-height: 16px;
         }
         
         .loading {
             text-align: center;
-            padding: 20px;
-            font-size: 16px;
+            padding: 16px;
+            font-size: 15px;
         }
         
         .action-buttons {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            margin: 15px 0;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 12px;
+            margin: 12px 0;
         }
         
         button {
-            padding: 10px 15px;
+            padding: 10px;
             background-color: var(--primary-color);
             color: white;
             font-size: 14px;
@@ -191,7 +199,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            min-width: 120px;
+            width: 100%;
         }
         
         button:hover {
@@ -200,24 +208,32 @@
         
         .result {
             background-color: #f9f9f9;
-            padding: 15px;
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 12px;
+            font-size: 13px;
         }
         
         .event-options {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            width: 100%;
         }
         
         .event-checkbox {
             display: flex;
             align-items: center;
-            font-size: 14px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        .event-checkbox input[type="checkbox"] {
+            margin-right: 6px;
+            min-width: 16px;
+            min-height: 16px;
         }
         
         .double-xp-checkbox {
@@ -232,21 +248,17 @@
             color: var(--event50-color);
         }
         
-        .event-checkbox input[type="checkbox"] {
-            margin-right: 5px;
-        }
-        
         #hourSelection {
-            margin-top: 15px;
+            margin-top: 12px;
         }
         
         .xp-summary {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             padding: 10px;
             background-color: var(--xp-summary-bg);
             border-radius: 6px;
             border-left: 3px solid var(--secondary-color);
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .xp-percentage {
@@ -259,55 +271,70 @@
             font-weight: 600;
         }
 
-        @media (max-width: 768px) {
-            body {
-                padding: 8px;
+        @media (min-width: 480px) {
+            .form-group {
+                flex: 1 1 calc(50% - 8px);
             }
             
-            .container {
-                padding: 12px;
-            }
-            
-            .form-row {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .form-group, .form-group-small {
-                flex: 1;
-                min-width: 100%;
+            .form-group-small {
+                flex: 0 1 calc(30% - 8px);
             }
             
             .hour-group {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
             }
             
-            .stamina-options {
-                width: 100%;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+            .hour-group label {
+                margin-bottom: 0;
+                min-width: 70px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
             }
             
-            .boost-checkbox {
-                margin-left: 0;
-                margin-top: 8px;
+            h1 {
+                font-size: 1.8rem;
+                margin: 10px 0 15px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .form-row {
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .form-group {
+                flex: 1;
+                min-width: 200px;
+            }
+            
+            .form-group-small {
+                flex: 0.5;
+                min-width: 120px;
+            }
+            
+            label {
+                font-size: 14px;
             }
             
             .action-buttons {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .event-options {
-                width: 100%;
+                flex-direction: row;
                 justify-content: space-between;
+                align-items: center;
             }
             
             button {
-                width: 100%;
+                width: auto;
+                min-width: 120px;
             }
         }
     </style>
@@ -573,7 +600,7 @@
 
             for (let i = 1; i <= numHours; i++) {
                 hourSelectionHTML += `
-                    <div class="hour-group green" id="hourGroup${i}">
+                    <div class="hour-group" id="hourGroup${i}">
                         <label>Hora ${i}:</label>
                         <div class="stamina-options">
                             <div class="stamina-option">
