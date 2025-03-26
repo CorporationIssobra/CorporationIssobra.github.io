@@ -136,7 +136,7 @@
         }
         .add-player-form {
             margin-top: 15px;
-            padding: 10px;
+            padding: 15px;
             background-color: #f9f9f9;
             border-radius: 4px;
         }
@@ -150,12 +150,23 @@
             cursor: pointer;
             transform: scale(1.2);
         }
+        .profit-input {
+            width: 80px;
+            padding: 4px;
+            border: 1px solid #d4edda;
+            border-radius: 3px;
+            margin-left: 5px;
+            background-color: #d4edda;
+            color: #155724;
+        }
         .waste-input {
             width: 80px;
             padding: 4px;
-            border: 1px solid #ddd;
+            border: 1px solid #f8d7da;
             border-radius: 3px;
             margin-left: 5px;
+            background-color: #f8d7da;
+            color: #721c24;
         }
         @media (max-width: 768px) {
             .container {
@@ -165,7 +176,7 @@
             .panel {
                 padding: 12px;
             }
-            .waste-input {
+            .profit-input, .waste-input {
                 width: 60px;
             }
         }
@@ -180,7 +191,7 @@
                 2. Clique em "Calcular Transferências"<br>
                 3. Os resultados aparecerão à direita<br>
                 4. Você pode editar a lista de players antes de calcular<br>
-                5. Adicione gastos extras (waste) no campo ao lado do balance<br>
+                5. Adicione lucros extras (profit) no campo verde e gastos (waste) no campo vermelho<br>
                 6. Clique nas linhas "transfer" para copiá-las
             </div>
             <textarea id="sessionData" placeholder="Cole os dados da sessão aqui..."></textarea>
@@ -195,7 +206,8 @@
                         <tr>
                             <th>Player</th>
                             <th>Balance</th>
-                            <th>Waste</th>
+                            <th>Profit (+)</th>
+                            <th>Waste (-)</th>
                             <th>Ativo</th>
                         </tr>
                     </thead>
@@ -204,10 +216,11 @@
                 
                 <div class="add-player-form">
                     <h3>Adicionar Player Manualmente</h3>
-                    <input type="text" id="newPlayerName" placeholder="Nome do player">
-                    <input type="text" id="newPlayerBalance" placeholder="Balance (ex: 100000)">
-                    <input type="text" id="newPlayerWaste" placeholder="Waste (ex: 50000)">
-                    <button onclick="addManualPlayer()">Adicionar</button>
+                    <input type="text" id="newPlayerName" placeholder="Nome" style="width: 100px;">
+                    <input type="text" id="newPlayerBalance" placeholder="Balance" style="width: 80px;" oninput="formatInputNumber(this)">    
+                    <input type="text" id="newPlayerProfit" placeholder="Profit" class="profit-input" oninput="formatInputNumber(this)">
+                    <input type="text" id="newPlayerWaste" placeholder="Waste" class="waste-input" oninput="formatInputNumber(this)">
+                    <button onclick="addManualPlayer()">Add</button>
                 </div>
             </div>
         </div>
@@ -227,6 +240,19 @@
 
     <script>
         let players = [];
+        
+        function formatInputNumber(input) {
+            // Remove todos os caracteres não numéricos
+            let value = input.value.replace(/[^\d]/g, '');
+            
+            // Converte para número
+            const num = parseInt(value || 0);
+            
+            // Formata com pontos
+            input.value = formatNumber(num);
+            
+            return num;
+        }
         
         function parseData() {
             const data = document.getElementById('sessionData').value;
@@ -251,6 +277,7 @@
                         currentPlayer = {
                             name: trimmedLine,
                             balance: 0,
+                            profit: 0,
                             waste: 0,
                             lineCount: 0,
                             active: true
@@ -300,8 +327,12 @@
                     <td>${player.name}</td>
                     <td>${formatNumber(player.balance)} gp</td>
                     <td>
-                        <input type="text" class="waste-input" value="${player.waste || 0}" 
-                            onchange="updateWaste(${index}, this.value)" placeholder="0">
+                        <input type="text" class="profit-input" value="${formatNumber(player.profit || 0)}" 
+                            oninput="formatInputNumber(this)" onchange="updateProfit(${index}, this.value)" placeholder="0">
+                    </td>
+                    <td>
+                        <input type="text" class="waste-input" value="${formatNumber(player.waste || 0)}" 
+                            oninput="formatInputNumber(this)" onchange="updateWaste(${index}, this.value)" placeholder="0">
                     </td>
                     <td>
                         <input type="checkbox" class="checkbox-active" ${player.active ? 'checked' : ''} 
@@ -315,9 +346,18 @@
             document.getElementById('playersTableContainer').style.display = 'block';
         }
         
+        function updateProfit(index, value) {
+            players[index].profit = cleanNumber(value) || 0;
+            calculate();
+            // Atualiza o campo com o valor formatado
+            document.querySelectorAll('.profit-input')[index].value = formatNumber(players[index].profit);
+        }
+        
         function updateWaste(index, value) {
             players[index].waste = cleanNumber(value) || 0;
-            calculate(); // Atualiza automaticamente o cálculo
+            calculate();
+            // Atualiza o campo com o valor formatado
+            document.querySelectorAll('.waste-input')[index].value = formatNumber(players[index].waste);
         }
         
         function togglePlayer(index, isActive) {
@@ -328,10 +368,12 @@
         function addManualPlayer() {
             const nameInput = document.getElementById('newPlayerName');
             const balanceInput = document.getElementById('newPlayerBalance');
+            const profitInput = document.getElementById('newPlayerProfit');
             const wasteInput = document.getElementById('newPlayerWaste');
             
             const name = nameInput.value.trim();
             const balance = cleanNumber(balanceInput.value.trim());
+            const profit = cleanNumber(profitInput.value.trim()) || 0;
             const waste = cleanNumber(wasteInput.value.trim()) || 0;
             
             if (!name) {
@@ -347,12 +389,14 @@
             players.push({
                 name: name,
                 balance: balance,
+                profit: profit,
                 waste: waste,
                 active: true
             });
             
             nameInput.value = '';
             balanceInput.value = '';
+            profitInput.value = '';
             wasteInput.value = '';
             
             displayPlayersTable();
@@ -369,22 +413,22 @@
                     return;
                 }
 
-                // Aplica o waste ao balance (deduz o waste do balance)
-                const playersWithWaste = activePlayers.map(p => ({
+                // Aplica o profit e waste ao balance (soma profit e subtrai waste do balance)
+                const playersWithAdjustments = activePlayers.map(p => ({
                     ...p,
-                    adjustedBalance: p.balance - (p.waste || 0)
+                    adjustedBalance: p.balance + (p.profit || 0) - (p.waste || 0)
                 }));
 
                 // Cálculo da divisão
-                const totalBalance = playersWithWaste.reduce((sum, p) => sum + p.adjustedBalance, 0);
+                const totalBalance = playersWithAdjustments.reduce((sum, p) => sum + p.adjustedBalance, 0);
                 const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
                 
                 // Pré-cálculo de débitos e créditos
-                const creditors = playersWithWaste.filter(p => p.adjustedBalance > balancePerPerson)
+                const creditors = playersWithAdjustments.filter(p => p.adjustedBalance > balancePerPerson)
                     .map(p => ({...p, toDistribute: p.adjustedBalance - balancePerPerson}))
                     .sort((a, b) => b.toDistribute - a.toDistribute);
                 
-                const debtors = playersWithWaste.filter(p => p.adjustedBalance < balancePerPerson)
+                const debtors = playersWithAdjustments.filter(p => p.adjustedBalance < balancePerPerson)
                     .map(p => ({...p, toReceive: balancePerPerson - p.adjustedBalance}))
                     .sort((a, b) => b.toReceive - a.toReceive);
 
@@ -483,13 +527,15 @@
                 });
             }
             
-            // Mostra também o total de waste (gastos extras)
+            // Mostra também o total de profit e waste
+            const totalProfit = players.reduce((sum, p) => sum + (p.profit || 0), 0);
             const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
             
             summaryContainer.innerHTML = `
-                <p><strong>Total balance:</strong> ${formatNumber(totalBalance + totalWaste)} gp</p>
-                <p><strong>Total waste:</strong> ${formatNumber(totalWaste)} gp</p>
-                <p><strong>Balance ajustado (com waste):</strong> ${formatNumber(totalBalance)} gp</p>
+                <p><strong>Total balance:</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
+                <p><strong>Total profit (+):</strong> ${formatNumber(totalProfit)} gp</p>
+                <p><strong>Total waste (-):</strong> ${formatNumber(totalWaste)} gp</p>
+                <p><strong>Balance ajustado:</strong> ${formatNumber(totalBalance)} gp</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
                 <p><strong>Balance por pessoa:</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
