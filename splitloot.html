@@ -302,7 +302,7 @@
                     const transferDiv = document.createElement('div');
                     transferDiv.className = 'transfer';
                     transferDiv.innerHTML = `
-                        <div style="margin-bottom: 3px;">${t.from} should pay ${formatNumber(t.amount)} gp to ${t.to}.</div>
+                        <div style="margin-bottom: 3px;">${t.from} deve pagar ${formatNumber(t.amount)} gps para ${t.to}.</div>
                         <span class="transfer-command" onclick="copyToClipboard(this)">transfer ${t.amount} to ${t.to}</span>
                     `;
                     transfersContainer.appendChild(transferDiv);
@@ -311,8 +311,8 @@
             
             summaryContainer.innerHTML = `
                 <p><strong>Total balance:</strong> ${formatNumber(totalBalance)} gp</p>
-                <p><strong>Number of people:</strong> ${numPeople}</p>
-                <p><strong>Balance per person:</strong> ${formatNumber(balancePerPerson)} gp</p>
+                <p><strong>Pessoas na party:</strong> ${numPeople}</p>
+                <p><strong>Balance por pessoa:</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
         }
 
