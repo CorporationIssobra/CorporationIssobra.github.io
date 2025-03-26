@@ -218,97 +218,48 @@
                     .map(p => ({...p, toReceive: balancePerPerson - p.balance}))
                     .sort((a, b) => b.toReceive - a.toReceive);
 
-                // Ordem específica de pagamento
+                // Nova lógica de distribuição corrigida
                 const transfers = [];
                 
-                // Encontra os jogadores específicos primeiro
-                const ellEm = creditors.find(p => p.name === "Ell Em");
-                const mathias = creditors.find(p => p.name.includes("Mathias Bynens"));
-                const snol = debtors.find(p => p.name === "Snol");
-                const sofsterella = debtors.find(p => p.name === "Sofsterella");
-                const xarsman = debtors.find(p => p.name === "Xarsman");
-
-                // 1. Ell Em paga para Snol
-                if (ellEm && snol) {
-                    const amount = Math.min(ellEm.toDistribute, snol.toReceive);
-                    if (amount > 0) {
-                        transfers.push({
-                            from: ellEm.name,
-                            to: snol.name,
-                            amount: amount
-                        });
-                        ellEm.toDistribute -= amount;
-                        snol.toReceive -= amount;
-                    }
-                }
-
-                // 2. Ell Em paga para Sofsterella
-                if (ellEm && sofsterella) {
-                    const amount = Math.min(ellEm.toDistribute, sofsterella.toReceive);
-                    if (amount > 0) {
-                        transfers.push({
-                            from: ellEm.name,
-                            to: sofsterella.name,
-                            amount: amount
-                        });
-                        ellEm.toDistribute -= amount;
-                        sofsterella.toReceive -= amount;
-                    }
-                }
-
-                // 3. Ell Em paga para Xarsman
-                if (ellEm && xarsman) {
-                    const amount = Math.min(ellEm.toDistribute, xarsman.toReceive);
-                    if (amount > 0) {
-                        transfers.push({
-                            from: ellEm.name,
-                            to: xarsman.name,
-                            amount: amount
-                        });
-                        ellEm.toDistribute -= amount;
-                        xarsman.toReceive -= amount;
-                    }
-                }
-
-                // 4. Mathias Bynens paga para Xarsman
-                if (mathias && xarsman) {
-                    const amount = Math.min(mathias.toDistribute, xarsman.toReceive);
-                    if (amount > 0) {
-                        transfers.push({
-                            from: mathias.name,
-                            to: xarsman.name,
-                            amount: amount
-                        });
-                        mathias.toDistribute -= amount;
-                        xarsman.toReceive -= amount;
-                    }
-                }
-
-                // Processa outros jogadores restantes
-                const remainingCreditors = creditors.filter(c => c.toDistribute > 0);
-                const remainingDebtors = debtors.filter(d => d.toReceive > 0);
-                
-                let cIndex = 0;
-                let dIndex = 0;
-                
-                while (cIndex < remainingCreditors.length && dIndex < remainingDebtors.length) {
-                    const creditor = remainingCreditors[cIndex];
-                    const debtor = remainingDebtors[dIndex];
+                // 1. Primeiro credor paga na ordem: menor dívida primeiro (Snol), depois média (Sofsterella), depois maior (Xarsman)
+                if (creditors.length > 0) {
+                    const mainCreditor = creditors[0];
                     
-                    const amount = Math.min(creditor.toDistribute, debtor.toReceive);
+                    // Ordena devedores: Snol (menor dívida) primeiro, depois Sofsterella, depois Xarsman
+                    const orderedDebtors = [...debtors].sort((a, b) => a.toReceive - b.toReceive);
                     
-                    if (amount > 0) {
-                        transfers.push({
-                            from: creditor.name,
-                            to: debtor.name,
-                            amount: amount
-                        });
+                    for (const debtor of orderedDebtors) {
+                        if (mainCreditor.toDistribute <= 0) break;
                         
-                        creditor.toDistribute -= amount;
-                        debtor.toReceive -= amount;
-                        
-                        if (creditor.toDistribute === 0) cIndex++;
-                        if (debtor.toReceive === 0) dIndex++;
+                        const amount = Math.min(mainCreditor.toDistribute, debtor.toReceive);
+                        if (amount > 0) {
+                            transfers.push({
+                                from: mainCreditor.name,
+                                to: debtor.name,
+                                amount: amount
+                            });
+                            mainCreditor.toDistribute -= amount;
+                            debtor.toReceive -= amount;
+                        }
+                    }
+                }
+
+                // 2. Segundo credor (se existir) paga o restante para o maior devedor (Xarsman)
+                if (creditors.length > 1) {
+                    const secondaryCreditor = creditors[1];
+                    const xarsman = debtors.find(d => d.toReceive > 0);
+                    
+                    if (xarsman && secondaryCreditor.toDistribute > 0) {
+                        const amount = Math.min(secondaryCreditor.toDistribute, xarsman.toReceive);
+                        if (amount > 0) {
+                            transfers.push({
+                                from: secondaryCreditor.name,
+                                to: xarsman.name,
+                                amount: amount
+                            });
+                            secondaryCreditor.toDistribute -= amount;
+                            xarsman.toReceive -= amount;
+                        }
                     }
                 }
 
@@ -351,7 +302,7 @@
                     const transferDiv = document.createElement('div');
                     transferDiv.className = 'transfer';
                     transferDiv.innerHTML = `
-                        <div style="margin-bottom: 3px;">${t.from} → ${t.to}: <strong>${formatNumber(t.amount)} gp</strong></div>
+                        <div style="margin-bottom: 3px;">${t.from} should pay ${formatNumber(t.amount)} gp to ${t.to}.</div>
                         <span class="transfer-command" onclick="copyToClipboard(this)">transfer ${t.amount} to ${t.to}</span>
                     `;
                     transfersContainer.appendChild(transferDiv);
@@ -359,9 +310,9 @@
             }
             
             summaryContainer.innerHTML = `
-                <p><strong>Total do grupo:</strong> ${formatNumber(totalBalance)} gp</p>
-                <p><strong>Jogadores:</strong> ${numPeople}</p>
-                <p><strong>Valor por pessoa:</strong> ${formatNumber(balancePerPerson)} gp</p>
+                <p><strong>Total balance:</strong> ${formatNumber(totalBalance)} gp</p>
+                <p><strong>Number of people:</strong> ${numPeople}</p>
+                <p><strong>Balance per person:</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
         }
 
