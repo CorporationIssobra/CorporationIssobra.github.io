@@ -15,7 +15,7 @@
         .container {
             display: flex;
             gap: 15px;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         .panel {
@@ -44,7 +44,7 @@
         }
         textarea {
             width: 100%;
-            min-height: 250px;
+            min-height: 150px;
             margin: 5px 0 10px 0;
             padding: 8px;
             border: 1px solid #ddd;
@@ -65,11 +65,9 @@
             padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
-            width: 100%;
             font-weight: bold;
             transition: background-color 0.2s;
             font-size: 0.9em;
-            flex: 1;
         }
         button:hover {
             background-color: #2980b9;
@@ -116,6 +114,42 @@
             border-radius: 4px;
             font-size: 0.9em;
         }
+        .players-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .players-table th, .players-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .players-table th {
+            background-color: #f2f2f2;
+        }
+        .players-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        .disabled-player {
+            color: #999;
+        }
+        .add-player-form {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .add-player-form input {
+            padding: 6px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .checkbox-active {
+            cursor: pointer;
+            transform: scale(1.2);
+        }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -130,24 +164,42 @@
 <body>
     <div class="container">
         <div class="panel">
-            <h1>Calculadora de Loot</h1>
             <div class="instructions">
                 <strong>Como usar:</strong><br>
-                1. Cole o clipboard da party do Tibia no campo à esquerda<br>
+                1. Cole o clipboard da party do Tibia no campo abaixo<br>
                 2. Clique em "Calcular Transferências"<br>
                 3. Os resultados aparecerão à direita<br>
-                4. Clique nas linhas "transfer" para copiá-las<br>
-                <em>Funciona para grupos de 2 ou mais jogadores</em>
+                4. Você pode editar a lista de players antes de calcular<br>
+                5. Clique nas linhas "transfer" para copiá-las
             </div>
             <textarea id="sessionData" placeholder="Cole os dados da sessão aqui..."></textarea>
             <div class="button-container">
-                <button onclick="calculate()">Calcular Transferências</button>
+                <button onclick="parseData()">Calcular Transferências</button>
                 <button class="clear" onclick="clearTextarea()">Limpar</button>
+            </div>
+            
+            <div id="playersTableContainer" style="display: none;">
+                <table class="players-table" id="playersTable">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Balance</th>
+                            <th>Ativo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody"></tbody>
+                </table>
+                
+                <div class="add-player-form">
+                    <h3>Adicionar Player Manualmente</h3>
+                    <input type="text" id="newPlayerName" placeholder="Nome do player">
+                    <input type="text" id="newPlayerBalance" placeholder="Balance (ex: 100000)">
+                    <button onclick="addManualPlayer()">Adicionar</button>
+                </div>
             </div>
         </div>
         
         <div class="panel">
-            <h1>Resultados</h1>
             <div id="result" style="display: none;">
                 <div class="result-container">
                     <div id="transfers"></div>
@@ -161,7 +213,9 @@
     </div>
 
     <script>
-        function calculate() {
+        let players = [];
+        
+        function parseData() {
             const data = document.getElementById('sessionData').value;
             if (!data.trim()) {
                 alert("Por favor, cole os dados da sessão");
@@ -171,7 +225,7 @@
             try {
                 // Parse dos jogadores e seus balances
                 const lines = data.split('\n');
-                const players = [];
+                players = [];
                 let currentPlayer = null;
                 let lineCount = 0;
 
@@ -184,7 +238,8 @@
                         currentPlayer = {
                             name: trimmedLine,
                             balance: 0,
-                            lineCount: 0
+                            lineCount: 0,
+                            active: true
                         };
                         players.push(currentPlayer);
                         lineCount = 0;
@@ -205,27 +260,109 @@
                     return;
                 }
 
+                // Mostra a tabela de players
+                displayPlayersTable();
+                
+                // Calcula automaticamente
+                calculate();
+                
+            } catch (error) {
+                alert("Erro ao processar os dados: " + error.message);
+                console.error(error);
+            }
+        }
+        
+        function displayPlayersTable() {
+            const tableBody = document.getElementById('playersTableBody');
+            tableBody.innerHTML = '';
+            
+            players.forEach((player, index) => {
+                const row = document.createElement('tr');
+                if (!player.active) {
+                    row.classList.add('disabled-player');
+                }
+                
+                row.innerHTML = `
+                    <td>${player.name}</td>
+                    <td>${formatNumber(player.balance)} gp</td>
+                    <td>
+                        <input type="checkbox" class="checkbox-active" ${player.active ? 'checked' : ''} 
+                            onchange="togglePlayer(${index}, this.checked)">
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            document.getElementById('playersTableContainer').style.display = 'block';
+        }
+        
+        function togglePlayer(index, isActive) {
+            players[index].active = isActive;
+            calculate(); // Atualiza automaticamente o cálculo
+        }
+        
+        function addManualPlayer() {
+            const nameInput = document.getElementById('newPlayerName');
+            const balanceInput = document.getElementById('newPlayerBalance');
+            
+            const name = nameInput.value.trim();
+            const balance = cleanNumber(balanceInput.value.trim());
+            
+            if (!name) {
+                alert("Por favor, insira o nome do player");
+                return;
+            }
+            
+            if (isNaN(balance)) {
+                alert("Por favor, insira um balance válido");
+                return;
+            }
+            
+            players.push({
+                name: name,
+                balance: balance,
+                active: true
+            });
+            
+            nameInput.value = '';
+            balanceInput.value = '';
+            
+            displayPlayersTable();
+            calculate(); // Atualiza automaticamente o cálculo
+        }
+
+        function calculate() {
+            try {
+                // Filtra apenas players ativos
+                const activePlayers = players.filter(p => p.active);
+                
+                if (activePlayers.length < 2) {
+                    alert("É necessário pelo menos 2 jogadores ativos para calcular transferências");
+                    return;
+                }
+
                 // Cálculo da divisão
-                const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
-                const balancePerPerson = Math.floor(totalBalance / players.length);
+                const totalBalance = activePlayers.reduce((sum, p) => sum + p.balance, 0);
+                const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
                 
                 // Pré-cálculo de débitos e créditos
-                const creditors = players.filter(p => p.balance > balancePerPerson)
+                const creditors = activePlayers.filter(p => p.balance > balancePerPerson)
                     .map(p => ({...p, toDistribute: p.balance - balancePerPerson}))
                     .sort((a, b) => b.toDistribute - a.toDistribute);
                 
-                const debtors = players.filter(p => p.balance < balancePerPerson)
+                const debtors = activePlayers.filter(p => p.balance < balancePerPerson)
                     .map(p => ({...p, toReceive: balancePerPerson - p.balance}))
                     .sort((a, b) => b.toReceive - a.toReceive);
 
-                // Nova lógica de distribuição corrigida
+                // Lógica de distribuição
                 const transfers = [];
                 
-                // 1. Primeiro credor paga na ordem: menor dívida primeiro (Snol), depois média (Sofsterella), depois maior (Xarsman)
+                // 1. Primeiro credor paga na ordem: menor dívida primeiro, depois média, depois maior
                 if (creditors.length > 0) {
                     const mainCreditor = creditors[0];
                     
-                    // Ordena devedores: Snol (menor dívida) primeiro, depois Sofsterella, depois Xarsman
+                    // Ordena devedores: menor dívida primeiro
                     const orderedDebtors = [...debtors].sort((a, b) => a.toReceive - b.toReceive);
                     
                     for (const debtor of orderedDebtors) {
@@ -244,36 +381,40 @@
                     }
                 }
 
-                // 2. Segundo credor (se existir) paga o restante para o maior devedor (Xarsman)
+                // 2. Segundo credor (se existir) paga o restante para o maior devedor
                 if (creditors.length > 1) {
                     const secondaryCreditor = creditors[1];
-                    const xarsman = debtors.find(d => d.toReceive > 0);
+                    const biggestDebtor = debtors.find(d => d.toReceive > 0);
                     
-                    if (xarsman && secondaryCreditor.toDistribute > 0) {
-                        const amount = Math.min(secondaryCreditor.toDistribute, xarsman.toReceive);
+                    if (biggestDebtor && secondaryCreditor.toDistribute > 0) {
+                        const amount = Math.min(secondaryCreditor.toDistribute, biggestDebtor.toReceive);
                         if (amount > 0) {
                             transfers.push({
                                 from: secondaryCreditor.name,
-                                to: xarsman.name,
+                                to: biggestDebtor.name,
                                 amount: amount
                             });
                             secondaryCreditor.toDistribute -= amount;
-                            xarsman.toReceive -= amount;
+                            biggestDebtor.toReceive -= amount;
                         }
                     }
                 }
 
                 // Exibe resultados
-                displayResults(transfers, totalBalance, players.length, balancePerPerson);
+                displayResults(transfers, totalBalance, activePlayers.length, balancePerPerson);
                 
             } catch (error) {
-                alert("Erro ao processar os dados: " + error.message);
+                alert("Erro ao calcular transferências: " + error.message);
                 console.error(error);
             }
         }
 
         function clearTextarea() {
             document.getElementById('sessionData').value = '';
+            document.getElementById('playersTableContainer').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('empty-result').style.display = 'block';
+            players = [];
         }
 
         function cleanNumber(numStr) {
