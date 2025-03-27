@@ -477,66 +477,121 @@
                     adjustedBalance: p.balance + (p.profit || 0) - (p.waste || 0)
                 }));
 
-                // Cálculo da divisão
+                // Cálculo do total
                 const totalBalance = playersWithAdjustments.reduce((sum, p) => sum + p.adjustedBalance, 0);
-                const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
                 
-                // Pré-cálculo de débitos e créditos
-                const creditors = playersWithAdjustments.filter(p => p.adjustedBalance > balancePerPerson)
-                    .map(p => ({...p, toDistribute: p.adjustedBalance - balancePerPerson}))
-                    .sort((a, b) => b.toDistribute - a.toDistribute);
-                
-                const debtors = playersWithAdjustments.filter(p => p.adjustedBalance < balancePerPerson)
-                    .map(p => ({...p, toReceive: balancePerPerson - p.adjustedBalance}))
-                    .sort((a, b) => b.toReceive - a.toReceive);
+                if (totalBalance >= 0) {
+                    // Cálculo normal para lucro
+                    const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
+                    
+                    // Pré-cálculo de débitos e créditos
+                    const creditors = playersWithAdjustments.filter(p => p.adjustedBalance > balancePerPerson)
+                        .map(p => ({...p, toDistribute: p.adjustedBalance - balancePerPerson}))
+                        .sort((a, b) => b.toDistribute - a.toDistribute);
+                    
+                    const debtors = playersWithAdjustments.filter(p => p.adjustedBalance < balancePerPerson)
+                        .map(p => ({...p, toReceive: balancePerPerson - p.adjustedBalance}))
+                        .sort((a, b) => b.toReceive - a.toReceive);
 
-                // Lógica de distribuição
-                const transfers = [];
-                
-                // 1. Primeiro credor paga na ordem: menor dívida primeiro, depois média, depois maior
-                if (creditors.length > 0) {
-                    const mainCreditor = creditors[0];
+                    // Lógica de distribuição
+                    const transfers = [];
                     
-                    // Ordena devedores: menor dívida primeiro
-                    const orderedDebtors = [...debtors].sort((a, b) => a.toReceive - b.toReceive);
-                    
-                    for (const debtor of orderedDebtors) {
-                        if (mainCreditor.toDistribute <= 0) break;
+                    // 1. Primeiro credor paga na ordem: menor dívida primeiro, depois média, depois maior
+                    if (creditors.length > 0) {
+                        const mainCreditor = creditors[0];
                         
-                        const amount = Math.min(mainCreditor.toDistribute, debtor.toReceive);
-                        if (amount > 0) {
-                            transfers.push({
-                                from: mainCreditor.name,
-                                to: debtor.name,
-                                amount: amount
-                            });
-                            mainCreditor.toDistribute -= amount;
-                            debtor.toReceive -= amount;
+                        // Ordena devedores: menor dívida primeiro
+                        const orderedDebtors = [...debtors].sort((a, b) => a.toReceive - b.toReceive);
+                        
+                        for (const debtor of orderedDebtors) {
+                            if (mainCreditor.toDistribute <= 0) break;
+                            
+                            const amount = Math.min(mainCreditor.toDistribute, debtor.toReceive);
+                            if (amount > 0) {
+                                transfers.push({
+                                    from: mainCreditor.name,
+                                    to: debtor.name,
+                                    amount: amount
+                                });
+                                mainCreditor.toDistribute -= amount;
+                                debtor.toReceive -= amount;
+                            }
                         }
                     }
-                }
 
-                // 2. Segundo credor (se existir) paga o restante para o maior devedor
-                if (creditors.length > 1) {
-                    const secondaryCreditor = creditors[1];
-                    const biggestDebtor = debtors.find(d => d.toReceive > 0);
+                    // 2. Segundo credor (se existir) paga o restante para o maior devedor
+                    if (creditors.length > 1) {
+                        const secondaryCreditor = creditors[1];
+                        const biggestDebtor = debtors.find(d => d.toReceive > 0);
+                        
+                        if (biggestDebtor && secondaryCreditor.toDistribute > 0) {
+                            const amount = Math.min(secondaryCreditor.toDistribute, biggestDebtor.toReceive);
+                            if (amount > 0) {
+                                transfers.push({
+                                    from: secondaryCreditor.name,
+                                    to: biggestDebtor.name,
+                                    amount: amount
+                                });
+                                secondaryCreditor.toDistribute -= amount;
+                                biggestDebtor.toReceive -= amount;
+                            }
+                        }
+                    }
+
+                    // Exibe resultados
+                    displayResults(transfers, totalBalance, activePlayers.length, balancePerPerson);
                     
-                    if (biggestDebtor && secondaryCreditor.toDistribute > 0) {
-                        const amount = Math.min(secondaryCreditor.toDistribute, biggestDebtor.toReceive);
-                        if (amount > 0) {
-                            transfers.push({
-                                from: secondaryCreditor.name,
-                                to: biggestDebtor.name,
-                                amount: amount
-                            });
-                            secondaryCreditor.toDistribute -= amount;
-                            biggestDebtor.toReceive -= amount;
+                } else {
+                    // NOVA LÓGICA PARA PREJUÍZO CORRIGIDA
+                    
+                    // Calcula o prejuízo total (valor absoluto)
+                    const totalLoss = Math.abs(totalBalance);
+                    
+                    // Calcula a média que cada um deve cobrir
+                    const averageLoss = Math.floor(totalLoss / activePlayers.length);
+                    
+                    // Ordena os jogadores por quem teve maior prejuízo (menor adjustedBalance)
+                    const sortedPlayers = [...playersWithAdjustments].sort((a, b) => a.adjustedBalance - b.adjustedBalance);
+                    
+                    const transfers = [];
+                    
+                    // Calcula quanto cada um deve pagar ou receber
+                    const playerContributions = sortedPlayers.map(p => ({
+                        ...p,
+                        contribution: averageLoss + p.adjustedBalance // adjustedBalance é negativo
+                    }));
+                    
+                    // Separa em pagadores (positive contribution) e recebedores (negative contribution)
+                    const payers = playerContributions.filter(p => p.contribution > 0);
+                    const receivers = playerContributions.filter(p => p.contribution < 0)
+                        .map(p => ({...p, contribution: Math.abs(p.contribution)}));
+                    
+                    // Ordena recebedores por maior contribuição (quem mais precisa receber)
+                    receivers.sort((a, b) => b.contribution - a.contribution);
+                    
+                    // Distribui o prejuízo - quem tem menos prejuízo paga para quem tem mais
+                    for (const payer of payers) {
+                        let remaining = payer.contribution;
+                        
+                        for (const receiver of receivers) {
+                            if (remaining <= 0 || receiver.contribution <= 0) continue;
+                            
+                            const amount = Math.min(remaining, receiver.contribution);
+                            if (amount > 0) {
+                                transfers.push({
+                                    from: payer.name,
+                                    to: receiver.name,
+                                    amount: amount
+                                });
+                                remaining -= amount;
+                                receiver.contribution -= amount;
+                            }
                         }
                     }
-                }
 
-                // Exibe resultados
-                displayResults(transfers, totalBalance, activePlayers.length, balancePerPerson);
+                    // Exibe resultados com indicação de prejuízo
+                    displayResults(transfers, totalBalance, activePlayers.length, -averageLoss, true);
+                }
                 
             } catch (error) {
                 alert("Erro ao calcular transferências: " + error.message);
@@ -544,23 +599,7 @@
             }
         }
 
-        function clearTextarea() {
-            document.getElementById('sessionData').value = '';
-            document.getElementById('playersTableContainer').style.display = 'none';
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('empty-result').style.display = 'block';
-            players = [];
-        }
-
-        function cleanNumber(numStr) {
-            return parseInt(numStr.replace(/[.,]/g, '')) || 0;
-        }
-        
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-        
-        function displayResults(transfers, totalBalance, numPeople, balancePerPerson) {
+        function displayResults(transfers, totalBalance, numPeople, balancePerPerson, isLoss = false) {
             const transfersContainer = document.getElementById('transfers');
             const summaryContainer = document.getElementById('summary');
             const resultDiv = document.getElementById('result');
@@ -593,12 +632,28 @@
                 <p><strong>Total balance:</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
                 <p><strong>Total profit (+):</strong> ${formatNumber(totalProfit)} gp</p>
                 <p><strong>Total waste (-):</strong> ${formatNumber(totalWaste)} gp</p>
-                <p><strong>Balance ajustado:</strong> ${formatNumber(totalBalance)} gp</p>
+                <p><strong>Balance ajustado:</strong> ${formatNumber(totalBalance)} gp ${isLoss ? '(PREJUÍZO)' : ''}</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
-                <p><strong>Balance por pessoa:</strong> ${formatNumber(balancePerPerson)} gp</p>
+                <p><strong>${isLoss ? 'Prejuízo por pessoa:' : 'Balance por pessoa:'}</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
         }
 
+        function clearTextarea() {
+            document.getElementById('sessionData').value = '';
+            document.getElementById('playersTableContainer').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('empty-result').style.display = 'block';
+            players = [];
+        }
+
+        function cleanNumber(numStr) {
+            return parseInt(numStr.replace(/[.,]/g, '')) || 0;
+        }
+        
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
         function copyToClipboard(element) {
             const text = element.textContent;
             navigator.clipboard.writeText(text).then(() => {
