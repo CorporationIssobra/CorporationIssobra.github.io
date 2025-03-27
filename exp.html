@@ -430,6 +430,7 @@
         };
         
         function formatNumber(num) {
+            num = num || 0; // Trata undefined/null como 0
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
         
@@ -438,6 +439,7 @@
         }
         
         function decimalToHoursMinutes(decimalHours) {
+            decimalHours = decimalHours || 0; // Trata undefined/null como 0
             const hours = Math.floor(decimalHours);
             const minutes = Math.round((decimalHours - hours) * 60);
             
@@ -456,14 +458,21 @@
         window.addEventListener('DOMContentLoaded', loadExperienceTable);
         
         const calculateExperience = () => {
-            const currentLevel = parseInt(document.getElementById('currentLevel').value);
-            const currentPercent = parseFloat(document.getElementById('currentPercent').value);
-            const targetLevel = parseInt(document.getElementById('targetLevel').value);
-            const rawExperience = parseFormattedNumber(document.getElementById('rawExperience').value);
+            // Trata campos vazios como 0
+            const currentLevel = parseInt(document.getElementById('currentLevel').value) || 1;
+            const currentPercent = parseFloat(document.getElementById('currentPercent').value) || 0;
+            const targetLevel = parseInt(document.getElementById('targetLevel').value) || 100;
+            const rawExperience = parseFormattedNumber(document.getElementById('rawExperience').value) || 1000000;
             const doubleXP = document.getElementById('doubleExperience').checked;
             const event30 = document.getElementById('event30').checked;
             const event50 = document.getElementById('event50').checked;
-            const numHours = parseInt(document.getElementById('numHours').value);
+            const numHours = parseInt(document.getElementById('numHours').value) || 1;
+            
+            // Atualiza os campos com os valores padrão caso estejam vazios
+            document.getElementById('currentLevel').value = currentLevel;
+            document.getElementById('currentPercent').value = currentPercent;
+            document.getElementById('targetLevel').value = targetLevel;
+            document.getElementById('rawExperience').value = formatNumber(rawExperience);
             
             let currentXP = experienceTable[currentLevel] || 0;
             let targetXP = experienceTable[targetLevel] || 0;
@@ -530,8 +539,10 @@
             let hourDetails = [];
             
             for (let i = 1; i <= numHours; i++) {
-                const stamina = document.querySelector(`input[name="stamina${i}"]:checked`).value;
-                const boost = document.getElementById(`boost${i}`).checked;
+                const staminaElement = document.querySelector(`input[name="stamina${i}"]:checked`);
+                const stamina = staminaElement ? staminaElement.value : 'green';
+                const boostElement = document.getElementById(`boost${i}`);
+                const boost = boostElement ? boostElement.checked : false;
                 const xpCalc = calculateHourXP(stamina, boost);
                 
                 hourDetails.push({ 
@@ -545,9 +556,9 @@
                 totalXPPerDay += xpCalc.total;
             }
             
-            let totalDays = Math.floor(totalXPRequired / totalXPPerDay);
-            let remainingXP = totalXPRequired % totalXPPerDay;
-            let remainingHours = remainingXP / (totalXPPerDay / numHours);
+            let totalDays = Math.floor(totalXPRequired / totalXPPerDay) || 0;
+            let remainingXP = totalXPRequired % totalXPPerDay || 0;
+            let remainingHours = remainingXP / (totalXPPerDay / numHours) || 0;
             
             const today = new Date();
             const targetDate = new Date(today);
@@ -596,7 +607,7 @@
         
         const hourSelection = () => {
             let hourSelectionHTML = '';
-            let numHours = document.getElementById('numHours').value;
+            let numHours = parseInt(document.getElementById('numHours').value) || 1;
 
             for (let i = 1; i <= numHours; i++) {
                 hourSelectionHTML += `
@@ -630,15 +641,29 @@
             
             document.getElementById('rawExperience').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\./g, '');
-                if (!isNaN(value)) e.target.value = formatNumber(parseInt(value));
+                if (!isNaN(value)) {
+                    e.target.value = value === '' ? '0' : formatNumber(parseInt(value));
+                }
             });
             
             // Validação para o campo de porcentagem
             document.getElementById('currentPercent').addEventListener('input', function(e) {
-                let value = parseInt(e.target.value);
-                if (isNaN(value)) value = 0;
+                let value = parseInt(e.target.value) || 0;
                 if (value < 0) value = 0;
                 if (value > 100) value = 100;
+                e.target.value = value;
+            });
+            
+            // Validação para outros campos numéricos
+            document.getElementById('currentLevel').addEventListener('input', function(e) {
+                let value = parseInt(e.target.value) || 1;
+                if (value < 1) value = 1;
+                e.target.value = value;
+            });
+            
+            document.getElementById('targetLevel').addEventListener('input', function(e) {
+                let value = parseInt(e.target.value) || 1;
+                if (value < 1) value = 1;
                 e.target.value = value;
             });
             
