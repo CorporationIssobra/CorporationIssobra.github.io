@@ -630,8 +630,8 @@
             
             summaryContainer.innerHTML = `
                 <p><strong>Total balance:</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
-                <p><strong>Total profit (+):</strong> ${formatNumber(totalProfit)} gp</p>
-                <p><strong>Total waste (-):</strong> ${formatNumber(totalWaste)} gp</p>
+                <p><strong>Profit extra (+):</strong> ${formatNumber(totalProfit)} gp</p>
+                <p><strong>Waste extra(-):</strong> ${formatNumber(totalWaste)} gp</p>
                 <p><strong>Balance ajustado:</strong> ${formatNumber(totalBalance)} gp ${isLoss ? '(PREJUÍZO)' : ''}</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
                 <p><strong>${isLoss ? 'Prejuízo por pessoa:' : 'Balance por pessoa:'}</strong> ${formatNumber(balancePerPerson)} gp</p>
