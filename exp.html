@@ -348,18 +348,18 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="currentLevel">Nível Atual:</label>
-                    <input type="number" id="currentLevel" min="0" value="">
+                    <input type="text" id="currentLevel" min="0" value="">
                 </div>
                 <div class="form-group-small">
                     <label for="currentPercent">Progresso:</label>
                     <div class="percentage-input">
-                        <input type="number" id="currentPercent" min="0" max="100" value="">
+                        <input type="number" id="currentPercent" min="0" max="100" value="0">
                         <span>%</span>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="targetLevel">Nível Alvo:</label>
-                    <input type="number" id="targetLevel" min="0" value="">
+                    <input type="text" id="targetLevel" min="0" value="">
                 </div>
             </div>
 
@@ -458,22 +458,16 @@
         window.addEventListener('DOMContentLoaded', loadExperienceTable);
         
         const calculateExperience = () => {
-            // Trata campos vazios como 0
-            const currentLevel = parseInt(document.getElementById('currentLevel').value) || "";
-            const currentPercent = parseFloat(document.getElementById('currentPercent').value) || "";
-            const targetLevel = parseInt(document.getElementById('targetLevel').value) || "";
+            // Trata campos vazios como valores padrão para cálculo
+            const currentLevel = parseInt(document.getElementById('currentLevel').value) || 1;
+            const currentPercent = parseFloat(document.getElementById('currentPercent').value) || 0;
+            const targetLevel = parseInt(document.getElementById('targetLevel').value) || 100;
             const rawExperience = parseFormattedNumber(document.getElementById('rawExperience').value) || 1000000;
             const doubleXP = document.getElementById('doubleExperience').checked;
             const event30 = document.getElementById('event30').checked;
             const event50 = document.getElementById('event50').checked;
             const numHours = parseInt(document.getElementById('numHours').value) || 1;
-            
-            // Atualiza os campos com os valores padrão caso estejam vazios
-            document.getElementById('currentLevel').value = currentLevel;
-            document.getElementById('currentPercent').value = currentPercent;
-            document.getElementById('targetLevel').value = targetLevel;
-            document.getElementById('rawExperience').value = formatNumber(rawExperience);
-            
+                        
             let currentXP = experienceTable[currentLevel] || 0;
             let targetXP = experienceTable[targetLevel] || 0;
             
@@ -585,10 +579,10 @@
             
             hourDetails.forEach(detail => {
                 resultText += `
-                    <div style="margin-bottom: 6px; padding: 6px; background-color: ${detail.stamina === 'green' ? 'var(--green-stamina)' : 'var(--orange-stamina)'}; border-radius: 4px; font-size: 13px;">
+                    <div style="margin-bottom: 6px; padding: 6px; background-color: ${detail.stamina === 'green' ? '#e8f5e9' : '#fff3e0'}; border-radius: 4px; font-size: 13px;">
                         <div style="margin-bottom: 4px;">
                             <strong>Hora ${detail.hour}:</strong> 
-                            Stamina: <span style="font-weight: 600; color: ${detail.stamina === 'green' ? 'var(--success-color)' : 'var(--warning-color)'}">${detail.stamina === 'green' ? 'Verde' : 'Laranja'}</span> | 
+                            Stamina: <span style="font-weight: 600; color: ${detail.stamina === 'green' ? '#2e7d32' : '#ef6c00'}">${detail.stamina === 'green' ? 'Verde' : 'Laranja'}</span> | 
                             Boost: <span style="font-weight: 600;">${detail.boost ? 'Sim' : 'Não'}</span>
                         </div>
                         <div class="xp-percentage">
@@ -616,12 +610,12 @@
                         <div class="stamina-options">
                             <div class="stamina-option">
                                 <input type="radio" id="staminaGreen${i}" name="stamina${i}" value="green" checked 
-                                       onchange="document.getElementById('hourGroup${i}').className = 'hour-group green'">
+                                       onchange="document.getElementById('hourGroup${i}').style.backgroundColor = '#e8f5e9'">
                                 <label for="staminaGreen${i}">Verde</label>
                             </div>
                             <div class="stamina-option">
                                 <input type="radio" id="staminaOrange${i}" name="stamina${i}" value="orange" 
-                                       onchange="document.getElementById('hourGroup${i}').className = 'hour-group orange'">
+                                       onchange="document.getElementById('hourGroup${i}').style.backgroundColor = '#fff3e0'">
                                 <label for="staminaOrange${i}">Laranja</label>
                             </div>
                             <div class="boost-checkbox">
@@ -641,14 +635,20 @@
             
             document.getElementById('rawExperience').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\./g, '');
-                if (!isNaN(value)) {
-                    e.target.value = value === '' ? '0' : formatNumber(parseInt(value));
+                if (value === '') {
+                    e.target.value = '';
+                } else if (!isNaN(value)) {
+                    e.target.value = formatNumber(parseInt(value));
                 }
             });
             
             // Validação para o campo de porcentagem
             document.getElementById('currentPercent').addEventListener('input', function(e) {
-                let value = parseInt(e.target.value) || 0;
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) {
+                    e.target.value = '';
+                    return;
+                }
                 if (value < 0) value = 0;
                 if (value > 100) value = 100;
                 e.target.value = value;
@@ -656,13 +656,21 @@
             
             // Validação para outros campos numéricos
             document.getElementById('currentLevel').addEventListener('input', function(e) {
-                let value = parseInt(e.target.value) || 1;
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) {
+                    e.target.value = '';
+                    return;
+                }
                 if (value < 1) value = 1;
                 e.target.value = value;
             });
             
             document.getElementById('targetLevel').addEventListener('input', function(e) {
-                let value = parseInt(e.target.value) || 1;
+                let value = parseInt(e.target.value);
+                if (isNaN(value)) {
+                    e.target.value = '';
+                    return;
+                }
                 if (value < 1) value = 1;
                 e.target.value = value;
             });
