@@ -459,9 +459,9 @@
         
         const calculateExperience = () => {
             // Trata campos vazios como 0
-            const currentLevel = parseInt(document.getElementById('currentLevel').value) || 1;
-            const currentPercent = parseFloat(document.getElementById('currentPercent').value) || 0;
-            const targetLevel = parseInt(document.getElementById('targetLevel').value) || 100;
+            const currentLevel = parseInt(document.getElementById('currentLevel').value) || "";
+            const currentPercent = parseFloat(document.getElementById('currentPercent').value) || "";
+            const targetLevel = parseInt(document.getElementById('targetLevel').value) || "";
             const rawExperience = parseFormattedNumber(document.getElementById('rawExperience').value) || 1000000;
             const doubleXP = document.getElementById('doubleExperience').checked;
             const event30 = document.getElementById('event30').checked;
