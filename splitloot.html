@@ -289,6 +289,28 @@
                     <button onclick="addManualPlayer()">Add</button>
                 </div>
             </div>
+            
+            <!-- Nova seção de histórico -->
+            <div class="history-section" style="margin-top: 20px;">
+                <h3>Histórico de Cálculos</h3>
+                <div class="history-controls">
+                    <button onclick="loadHistory()">Atualizar Histórico</button>
+                    <button onclick="clearHistory()" class="clear">Limpar Histórico</button>
+                </div>
+                <div id="historyContainer" style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Total</th>
+                                <th>Players</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
         <div class="panel">
@@ -306,6 +328,13 @@
 
     <script>
         let players = [];
+        let currentCalculationId = null;
+        
+        // Ao carregar a página, carrega o histórico
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+        });
+        
         function abbreviateName(name, maxLength = 20) {
             return name.length > maxLength ? name.substring(0, maxLength-1) + '.' : name;
         }
@@ -480,9 +509,13 @@
                 // Cálculo do total
                 const totalBalance = playersWithAdjustments.reduce((sum, p) => sum + p.adjustedBalance, 0);
                 
+                let transfers = [];
+                let balancePerPerson = 0;
+                let isLoss = false;
+                
                 if (totalBalance >= 0) {
                     // Cálculo normal para lucro
-                    const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
+                    balancePerPerson = Math.floor(totalBalance / activePlayers.length);
                     
                     // Pré-cálculo de débitos e créditos
                     const creditors = playersWithAdjustments.filter(p => p.adjustedBalance > balancePerPerson)
@@ -494,7 +527,7 @@
                         .sort((a, b) => b.toReceive - a.toReceive);
 
                     // Lógica de distribuição
-                    const transfers = [];
+                    transfers = [];
                     
                     // 1. Primeiro credor paga na ordem: menor dívida primeiro, depois média, depois maior
                     if (creditors.length > 0) {
@@ -537,39 +570,28 @@
                             }
                         }
                     }
-
-                    // Exibe resultados
-                    displayResults(transfers, totalBalance, activePlayers.length, balancePerPerson);
                     
                 } else {
-                    // NOVA LÓGICA PARA PREJUÍZO CORRIGIDA
-                    
-                    // Calcula o prejuízo total (valor absoluto)
+                    // Lógica para prejuízo
+                    isLoss = true;
                     const totalLoss = Math.abs(totalBalance);
+                    balancePerPerson = Math.floor(totalLoss / activePlayers.length);
                     
-                    // Calcula a média que cada um deve cobrir
-                    const averageLoss = Math.floor(totalLoss / activePlayers.length);
-                    
-                    // Ordena os jogadores por quem teve maior prejuízo (menor adjustedBalance)
                     const sortedPlayers = [...playersWithAdjustments].sort((a, b) => a.adjustedBalance - b.adjustedBalance);
                     
-                    const transfers = [];
+                    transfers = [];
                     
-                    // Calcula quanto cada um deve pagar ou receber
                     const playerContributions = sortedPlayers.map(p => ({
                         ...p,
-                        contribution: averageLoss + p.adjustedBalance // adjustedBalance é negativo
+                        contribution: balancePerPerson + p.adjustedBalance // adjustedBalance é negativo
                     }));
                     
-                    // Separa em pagadores (positive contribution) e recebedores (negative contribution)
                     const payers = playerContributions.filter(p => p.contribution > 0);
                     const receivers = playerContributions.filter(p => p.contribution < 0)
                         .map(p => ({...p, contribution: Math.abs(p.contribution)}));
                     
-                    // Ordena recebedores por maior contribuição (quem mais precisa receber)
                     receivers.sort((a, b) => b.contribution - a.contribution);
                     
-                    // Distribui o prejuízo - quem tem menos prejuízo paga para quem tem mais
                     for (const payer of payers) {
                         let remaining = payer.contribution;
                         
@@ -588,10 +610,13 @@
                             }
                         }
                     }
-
-                    // Exibe resultados com indicação de prejuízo
-                    displayResults(transfers, totalBalance, activePlayers.length, -averageLoss, true);
                 }
+
+                // Exibe resultados
+                displayResults(transfers, totalBalance, activePlayers.length, balancePerPerson, isLoss);
+                
+                // Salva no histórico
+                saveToHistory(transfers, totalBalance, activePlayers.length, balancePerPerson, isLoss);
                 
             } catch (error) {
                 alert("Erro ao calcular transferências: " + error.message);
@@ -637,6 +662,162 @@
                 <p><strong>${isLoss ? 'Prejuízo por pessoa:' : 'Balance por pessoa:'}</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
         }
+        
+        function saveToHistory(transfers, totalBalance, numPeople, balancePerPerson, isLoss) {
+            try {
+                // Cria um ID único para este cálculo
+                currentCalculationId = Date.now().toString();
+                
+                // Prepara os dados para salvar
+                const historyEntry = {
+                    id: currentCalculationId,
+                    date: new Date().toLocaleString(),
+                    transfers: transfers,
+                    totalBalance: totalBalance,
+                    numPeople: numPeople,
+                    balancePerPerson: balancePerPerson,
+                    isLoss: isLoss,
+                    players: players.map(p => ({
+                        name: p.name,
+                        balance: p.balance,
+                        profit: p.profit,
+                        waste: p.waste,
+                        active: p.active
+                    })),
+                    totalProfit: players.reduce((sum, p) => sum + (p.profit || 0), 0),
+                    totalWaste: players.reduce((sum, p) => sum + (p.waste || 0), 0)
+                };
+                
+                // Obtém o histórico atual ou cria um novo array
+                let history = JSON.parse(localStorage.getItem('tibiaPartyHistory')) || [];
+                
+                // Adiciona a nova entrada no início do array
+                history.unshift(historyEntry);
+                
+                // Limita o histórico aos últimos 50 registros para não ocupar muito espaço
+                if (history.length > 50) {
+                    history = history.slice(0, 50);
+                }
+                
+                // Salva no Local Storage
+                localStorage.setItem('tibiaPartyHistory', JSON.stringify(history));
+                
+                // Atualiza a exibição do histórico
+                loadHistory();
+                
+            } catch (error) {
+                console.error('Erro ao salvar no histórico:', error);
+            }
+        }
+        
+        function loadHistory() {
+            try {
+                const historyTableBody = document.getElementById('historyTableBody');
+                historyTableBody.innerHTML = '';
+                
+                const history = JSON.parse(localStorage.getItem('tibiaPartyHistory')) || [];
+                
+                if (history.length === 0) {
+                    historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum registro no histórico</td></tr>';
+                    return;
+                }
+                
+                history.forEach(entry => {
+                    const row = document.createElement('tr');
+                    if (entry.id === currentCalculationId) {
+                        row.classList.add('current-calculation');
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${entry.date}</td>
+                        <td>${formatNumber(entry.totalBalance)} gp ${entry.isLoss ? '(PREJUÍZO)' : ''}</td>
+                        <td>${entry.numPeople}</td>
+                        <td>
+                            <button onclick="viewHistoryEntry('${entry.id}')" class="small-btn">Ver</button>
+                            <button onclick="deleteHistoryEntry('${entry.id}')" class="small-btn clear">X</button>
+                        </td>
+                    `;
+                    
+                    historyTableBody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+            }
+        }
+        
+        function viewHistoryEntry(entryId) {
+            const history = JSON.parse(localStorage.getItem('tibiaPartyHistory')) || [];
+            const entry = history.find(e => e.id === entryId);
+            
+            if (!entry) {
+                alert('Registro não encontrado no histórico');
+                return;
+            }
+            
+            // Define os players atuais como os do histórico
+            players = entry.players.map(p => ({
+                ...p,
+                lineCount: 0 // Adiciona propriedades que podem estar faltando
+            }));
+            
+            // Atualiza a tabela de players
+            displayPlayersTable();
+            
+            // Exibe os resultados
+            displayResults(entry.transfers, entry.totalBalance, entry.numPeople, entry.balancePerPerson, entry.isLoss);
+            
+            // Rola para cima para mostrar os resultados
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+            
+            // Marca como cálculo atual
+            currentCalculationId = entryId;
+            loadHistory(); // Atualiza a tabela para destacar este item
+        }
+        
+        function deleteHistoryEntry(entryId) {
+            if (!confirm('Tem certeza que deseja remover este registro do histórico?')) {
+                return;
+            }
+            
+            try {
+                let history = JSON.parse(localStorage.getItem('tibiaPartyHistory')) || [];
+                history = history.filter(e => e.id !== entryId);
+                localStorage.setItem('tibiaPartyHistory', JSON.stringify(history));
+                loadHistory();
+                
+                // Se estivermos visualizando o registro que foi deletado, limpa a tela
+                if (currentCalculationId === entryId) {
+                    document.getElementById('result').style.display = 'none';
+                    document.getElementById('empty-result').style.display = 'block';
+                    currentCalculationId = null;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao deletar do histórico:', error);
+            }
+        }
+        
+        function clearHistory() {
+            if (!confirm('Tem certeza que deseja limpar todo o histórico? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            try {
+                localStorage.removeItem('tibiaPartyHistory');
+                loadHistory();
+                
+                // Se estivermos visualizando algum registro, limpa a tela
+                if (currentCalculationId) {
+                    document.getElementById('result').style.display = 'none';
+                    document.getElementById('empty-result').style.display = 'block';
+                    currentCalculationId = null;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao limpar histórico:', error);
+            }
+        }
 
         function clearTextarea() {
             document.getElementById('sessionData').value = '';
@@ -644,6 +825,7 @@
             document.getElementById('result').style.display = 'none';
             document.getElementById('empty-result').style.display = 'block';
             players = [];
+            currentCalculationId = null;
         }
 
         function cleanNumber(numStr) {
@@ -678,5 +860,49 @@
             }
         });
     </script>
+    
+    <style>
+        /* Adiciona estilos para a seção de histórico */
+        .history-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .history-table th {
+            background-color: #f0f0f0;
+        }
+        
+        .history-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .current-calculation {
+            background-color: #e6f7ff !important;
+        }
+        
+        .small-btn {
+            padding: 3px 8px;
+            font-size: 0.8em;
+        }
+    </style>
 </body>
 </html>
