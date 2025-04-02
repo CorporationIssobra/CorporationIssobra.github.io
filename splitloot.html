@@ -5,13 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Loot - Corporation</title>
     <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --panel-bg: white;
+            --panel-shadow: rgba(0,0,0,0.1);
+            --primary-color: #2c3e50;
+            --primary-border: #3498db;
+            --secondary-bg: #f0f7ff;
+            --button-bg: #3498db;
+            --button-hover: #2980b9;
+            --clear-button: #e74c3c;
+            --clear-hover: #c0392b;
+            --transfer-bg: #e8f8f5;
+            --transfer-border: #2ecc71;
+            --command-bg: #b6b6b6;
+            --command-hover: #f5d5d1;
+            --summary-bg: #f9f9f9;
+            --table-header: #f2f2f2;
+            --table-hover: #f5f5f5;
+            --disabled-text: #999;
+            --profit-bg: #d4edda;
+            --profit-text: #155724;
+            --profit-border: #d4edda;
+            --waste-bg: #f8d7da;
+            --waste-text: #721c24;
+            --waste-border: #f8d7da;
+            --history-bg: #f8f9fa;
+            --history-border: #ddd;
+            --current-bg: #e6f7ff;
+        }
+
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --panel-bg: #2d2d2d;
+            --panel-shadow: rgba(0,0,0,0.3);
+            --primary-color: #3498db;
+            --primary-border: #2980b9;
+            --secondary-bg: #1e3a5f;
+            --button-bg: #2980b9;
+            --button-hover: #3498db;
+            --clear-button: #c0392b;
+            --clear-hover: #e74c3c;
+            --transfer-bg: #1e3e3e;
+            --transfer-border: #2ecc71;
+            --command-bg: #4a4a4a;
+            --command-hover: #5a5a5a;
+            --summary-bg: #333333;
+            --table-header: #3d3d3d;
+            --table-hover: #4a4a4a;
+            --disabled-text: #777;
+            --profit-bg: #1e4530;
+            --profit-text: #a3e9b9;
+            --profit-border: #1e4530;
+            --waste-bg: #4a1e2a;
+            --waste-text: #f5a3b9;
+            --waste-border: #4a1e2a;
+            --history-bg: #2d2d2d;
+            --history-border: #444;
+            --current-bg: #1e3e5f;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 15px;
-            background-color: #f5f5f5;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
+        
+        /* Restante do seu CSS permanece o mesmo, apenas substitua as cores hardcoded pelas variáveis */
         .container {
             display: flex;
             gap: 15px;
@@ -20,38 +85,42 @@
         }
         .panel {
             flex: 1;
-            background-color: white;
+            background-color: var(--panel-bg);
             border-radius: 6px;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 5px var(--panel-shadow);
             padding: 15px;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         h1 {
             text-align: center;
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-border);
             padding-bottom: 8px;
             margin: 0 0 10px 0;
             font-size: 1.4em;
         }
         .instructions {
             font-size: 0.9em;
-            color: #555;
+            color: var(--text-color);
             margin-bottom: 10px;
             padding: 10px;
-            background-color: #f0f7ff;
+            background-color: var(--secondary-bg);
             border-radius: 5px;
-            border-left: 3px solid #3498db;
+            border-left: 3px solid var(--primary-border);
         }
         textarea {
             width: 100%;
             min-height: 150px;
             margin: 5px 0 10px 0;
             padding: 8px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--table-header);
             border-radius: 4px;
             font-family: monospace;
             box-sizing: border-box;
             font-size: 0.9em;
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         .button-container {
             display: flex;
@@ -59,7 +128,7 @@
             margin-bottom: 10px;
         }
         button {
-            background-color: #3498db;
+            background-color: var(--button-bg);
             color: white;
             border: none;
             padding: 8px 12px;
@@ -70,13 +139,13 @@
             font-size: 0.9em;
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: var(--button-hover);
         }
         button.clear {
-            background-color: #e74c3c;
+            background-color: var(--clear-button);
         }
         button.clear:hover {
-            background-color: #c0392b;
+            background-color: var(--clear-hover);
         }
         .result-container {
             max-height: 100%;
@@ -86,18 +155,18 @@
         .transfer {
             margin: 8px 0;
             padding: 8px;
-            background-color: #e8f8f5;
+            background-color: var(--transfer-bg);
             border-radius: 4px;
-            border-left: 3px solid #2ecc71;
+            border-left: 3px solid var(--transfer-border);
             font-size: 1em;
         }
         .transfer-command {
             font-family: monospace;
             font-weight: bold;
-            color: #000000;
+            color: var(--text-color);
             margin-top: 4px;
             display: inline-block;
-            background-color: #b6b6b6;
+            background-color: var(--command-bg);
             padding: 2px 5px;
             border-radius: 3px;
             font-size: 1.1em;
@@ -105,12 +174,12 @@
             transition: background-color 0.2s;
         }
         .transfer-command:hover {
-            background-color: #f5d5d1;
+            background-color: var(--command-hover);
         }
         .summary {
             margin-top: 12px;
             padding: 8px;
-            background-color: #f9f9f9;
+            background-color: var(--summary-bg);
             border-radius: 4px;
             font-size: 0.9em;
         }
@@ -123,28 +192,30 @@
         .players-table th, .players-table td {
             padding: 8px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--table-header);
         }
         .players-table th {
-            background-color: #f2f2f2;
+            background-color: var(--table-header);
         }
         .players-table tr:hover {
-            background-color: #f5f5f5;
+            background-color: var(--table-hover);
         }
         .disabled-player {
-            color: #999;
+            color: var(--disabled-text);
         }
         .add-player-form {
             margin-top: 15px;
             padding: 15px;
-            background-color: #f9f9f9;
+            background-color: var(--summary-bg);
             border-radius: 4px;
         }
         .add-player-form input {
             padding: 6px;
             margin-right: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--table-header);
             border-radius: 4px;
+            background-color: var(--panel-bg);
+            color: var(--text-color);
         }
         .checkbox-active {
             cursor: pointer;
@@ -153,20 +224,20 @@
         .profit-input {
             width: 80px;
             padding: 4px;
-            border: 1px solid #d4edda;
+            border: 1px solid var(--profit-border);
             border-radius: 3px;
             margin-left: 5px;
-            background-color: #d4edda;
-            color: #155724;
+            background-color: var(--profit-bg);
+            color: var(--profit-text);
         }
         .waste-input {
             width: 80px;
             padding: 4px;
-            border: 1px solid #f8d7da;
+            border: 1px solid var(--waste-border);
             border-radius: 3px;
             margin-left: 5px;
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: var(--waste-bg);
+            color: var(--waste-text);
         }
         .new-player-inputs {
             display: flex;
@@ -177,6 +248,109 @@
         .new-player-inputs input {
             flex: 1;
             min-width: 0;
+        }
+        
+        /* Adiciona estilos para a seção de histórico */
+        .history-section {
+            background: var(--history-bg);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--history-border);
+        }
+        
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 8px;
+            border: 1px solid var(--history-border);
+            text-align: left;
+        }
+        
+        .history-table th {
+            background-color: var(--table-header);
+        }
+        
+        .history-table tr:hover {
+            background-color: var(--table-hover);
+        }
+        
+        .current-calculation {
+            background-color: var(--current-bg) !important;
+        }
+        
+        .small-btn {
+            padding: 3px 8px;
+            font-size: 0.8em;
+        }
+        
+        /* Toggle switch para tema escuro/claro */
+        .theme-switch {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+        }
+        
+        .theme-switch label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
         }
         
         @media (max-width: 768px) {
@@ -223,6 +397,12 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
+            .theme-switch {
+                position: static;
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: flex-end;
+            }
         }
 
         @media (max-width: 480px) {
@@ -247,6 +427,17 @@
     </style>
 </head>
 <body>
+    <!-- Adiciona o toggle switch para tema escuro/claro -->
+    <div class="theme-switch">
+        <label>
+            <span id="theme-label">Modo Escuro</span>
+            <div class="switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </div>
+        </label>
+    </div>
+    
     <div class="container">
         <div class="panel">
             <div class="instructions">
@@ -320,7 +511,7 @@
                     <div id="summary" class="summary"></div>
                 </div>
             </div>
-            <div id="empty-result" style="text-align: center; padding: 15px; color: #777; font-size: 0.9em;">
+            <div id="empty-result" style="text-align: center; padding: 15px; color: var(--disabled-text); font-size: 0.9em;">
                 Os resultados aparecerão aqui após o cálculo
             </div>
         </div>
@@ -330,10 +521,35 @@
         let players = [];
         let currentCalculationId = null;
         
-        // Ao carregar a página, carrega o histórico
+        // Ao carregar a página, carrega o histórico e o tema salvo
         document.addEventListener('DOMContentLoaded', function() {
             loadHistory();
+            loadThemePreference();
+            
+            // Adiciona evento ao toggle
+            document.getElementById('theme-toggle').addEventListener('change', function() {
+                toggleTheme(this.checked);
+            });
         });
+        
+        // Funções para gerenciar o tema
+        function loadThemePreference() {
+            const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+            document.getElementById('theme-toggle').checked = darkModeEnabled;
+            toggleTheme(darkModeEnabled);
+        }
+        
+        function toggleTheme(enableDark) {
+            if (enableDark) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-label').textContent = 'Modo Claro';
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('theme-label').textContent = 'Modo Escuro';
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
         
         function abbreviateName(name, maxLength = 20) {
             return name.length > maxLength ? name.substring(0, maxLength-1) + '.' : name;
@@ -860,49 +1076,5 @@
             }
         });
     </script>
-    
-    <style>
-        /* Adiciona estilos para a seção de histórico */
-        .history-section {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        
-        .history-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .history-table th, .history-table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        
-        .history-table th {
-            background-color: #f0f0f0;
-        }
-        
-        .history-table tr:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .current-calculation {
-            background-color: #e6f7ff !important;
-        }
-        
-        .small-btn {
-            padding: 3px 8px;
-            font-size: 0.8em;
-        }
-    </style>
 </body>
 </html>
