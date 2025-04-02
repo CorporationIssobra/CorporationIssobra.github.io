@@ -221,6 +221,16 @@
             cursor: pointer;
             transform: scale(1.2);
         }
+        .new-player-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .new-player-inputs input {
+            flex: 1;
+            min-width: 0;
+        }
         .profit-input {
             width: 80px;
             padding: 4px;
@@ -238,16 +248,6 @@
             margin-left: 5px;
             background-color: var(--waste-bg);
             color: var(--waste-text);
-        }
-        .new-player-inputs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 5px;
-        }
-        .new-player-inputs input {
-            flex: 1;
-            min-width: 0;
         }
         
         /* Adiciona estilos para a seção de histórico */
@@ -542,11 +542,11 @@
         function toggleTheme(enableDark) {
             if (enableDark) {
                 document.body.classList.add('dark-mode');
-                document.getElementById('theme-label').textContent = 'Modo Claro';
+                document.getElementById('theme-label').textContent = 'Dark Mode';
                 localStorage.setItem('darkMode', 'true');
             } else {
                 document.body.classList.remove('dark-mode');
-                document.getElementById('theme-label').textContent = 'Modo Escuro';
+                document.getElementById('theme-label').textContent = 'Dark Mode';
                 localStorage.setItem('darkMode', 'false');
             }
         }
