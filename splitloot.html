@@ -668,6 +668,64 @@
             calculate(); // Atualiza automaticamente o cálculo
         }
         
+        function formatNumberInput(inputElement) {
+        // Remove todos os pontos existentes
+        let value = inputElement.value.replace(/\./g, '');
+        
+        // Se for um número válido, formata com pontos
+        if (!isNaN(value) && value !== '') {
+            inputElement.value = parseInt(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+    }
+
+        function cleanNumber(numStr) {
+            return parseInt(numStr.replace(/[.,]/g, '')) || 0;
+        }
+
+        // ... (no final do código existente, adicione os event listeners para os inputs)
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            loadThemePreference();
+            
+            // Adiciona evento ao toggle
+            document.getElementById('theme-toggle').addEventListener('change', function() {
+                toggleTheme(this.checked);
+            });
+
+            // Adiciona os event listeners para formatar os inputs automaticamente
+            document.getElementById('sessionData').addEventListener('input', function(e) {
+                // Não formatamos o textarea principal
+            });
+
+            // Adiciona listeners para os inputs de números
+            const numberInputs = [
+                'newPlayerBalance', 'newPlayerProfit', 'newPlayerWaste'
+            ];
+
+            numberInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', function() {
+                        formatNumberInput(this);
+                    });
+
+                    // Formata o valor inicial se existir
+                    if (input.value) {
+                        formatNumberInput(input);
+                    }
+                }
+            });
+
+            // Adiciona listener para a tabela de players (inputs dinâmicos)
+            document.getElementById('playersTableContainer').addEventListener('input', function(e) {
+                if (e.target.classList.contains('profit-input') || 
+                    e.target.classList.contains('waste-input')) {
+                    formatNumberInput(e.target);
+                }
+            });
+        });
+
         function addManualPlayer() {
             const nameInput = document.getElementById('newPlayerName');
             const balanceInput = document.getElementById('newPlayerBalance');
