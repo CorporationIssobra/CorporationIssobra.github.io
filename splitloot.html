@@ -424,6 +424,21 @@
                 max-width: 60px;
             }
         }
+            .copy-all-btn {
+            background-color: #155724;;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            font-size: 1em;
+        }
+
+.copy-all-btn:hover {
+    background-color: #309797;
+}
     </style>
 </head>
 <body>
@@ -514,6 +529,7 @@
             <div id="empty-result" style="text-align: center; padding: 15px; color: var(--disabled-text); font-size: 0.9em;">
                 Os resultados aparecerão aqui após o cálculo
             </div>
+            <button onclick="copyAllTransfers()" style="margin-top: 10px;" class="copy-all-btn">Copiar todas as transfers</button>
         </div>
     </div>
 
@@ -1133,6 +1149,30 @@
                 displayPlayersTable();
             }
         });
+        function copyAllTransfers() {
+    const transfers = document.querySelectorAll('.transfer');
+    let fullText = "Transferências necessárias:\n";
+    
+    transfers.forEach(transfer => {
+        const lines = transfer.textContent.split('\n');
+        fullText += lines[0].trim() + '\n'; // Linha descritiva
+        fullText += lines[1].trim() + '\n\n'; // Comando transfer
+    });
+
+    navigator.clipboard.writeText(fullText.trim()).then(() => {
+        const btn = document.querySelector('.copy-all-btn');
+        const originalText = btn.textContent;
+        btn.textContent = "Copiado!";
+        btn.style.backgroundColor = '#2ecc71';
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.backgroundColor = let(--transfer-border);
+        }, 2000);
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+    });
+}
     </script>
 </body>
 </html>
