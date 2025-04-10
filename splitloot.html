@@ -576,7 +576,7 @@
                     if (!line.startsWith('\t') && !line.startsWith('    ') && 
                         !trimmedLine.match(/^(Session|Loot Type|Loot|Supplies|Balance)/)) {
                         currentPlayer = {
-                            name: trimmedLine,
+                            name: trimmedLine.replace(' (Leader)', ''),
                             balance: 0,
                             profit: 0,
                             waste: 0,
@@ -732,7 +732,7 @@
             const profitInput = document.getElementById('newPlayerProfit');
             const wasteInput = document.getElementById('newPlayerWaste');
             
-            const name = nameInput.value.trim();
+            const name = nameInput.value.trim().replace(' (Leader)', '');
             const balance = cleanNumber(balanceInput.value.trim());
             const profit = cleanNumber(profitInput.value.trim()) || 0;
             const waste = cleanNumber(wasteInput.value.trim()) || 0;
@@ -952,7 +952,7 @@
                     balancePerPerson: balancePerPerson,
                     isLoss: isLoss,
                     players: players.map(p => ({
-                        name: p.name,
+                        name: p.name.replace(' (Leader)', ''),
                         balance: p.balance,
                         profit: p.profit,
                         waste: p.waste,
