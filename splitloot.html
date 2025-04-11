@@ -932,7 +932,7 @@
                     const transferDiv = document.createElement('div');
                     transferDiv.className = 'transfer';
                     transferDiv.innerHTML = `
-                        <div style="margin-bottom: 3px;">${t.from} deve pagar ${formatNumber(t.amount)} gps para ${t.to}.</div>
+                        <div style="margin-bottom: 3px;">${t.from} --> transfer ${formatNumber(t.amount)} to ${t.to}.</div>
                         <span class="transfer-command" onclick="copyToClipboard(this)">transfer ${t.amount} to ${t.to}</span>
                     `;
                     transfersContainer.appendChild(transferDiv);
