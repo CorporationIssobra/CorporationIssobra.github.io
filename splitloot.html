@@ -932,7 +932,7 @@
                     const transferDiv = document.createElement('div');
                     transferDiv.className = 'transfer';
                     transferDiv.innerHTML = `
-                        <div style="margin-bottom: 3px;">${t.from} --> transfer ${formatNumber(t.amount)} to ${t.to}</div>
+                        <div style="margin-bottom: 3px;">${t.from}</div>
                         <span class="transfer-command" onclick="copyToClipboard(this)">transfer ${t.amount} to ${t.to}</span>
                     `;
                     transfersContainer.appendChild(transferDiv);
@@ -944,12 +944,11 @@
             const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
             
             summaryContainer.innerHTML = `
-                <p><strong>Total balance:</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
+                <p><strong>Profit:</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
                 <p><strong>Profit extra (+):</strong> ${formatNumber(totalProfit)} gp</p>
                 <p><strong>Waste extra(-):</strong> ${formatNumber(totalWaste)} gp</p>
-                <p><strong>Balance ajustado:</strong> ${formatNumber(totalBalance)} gp ${isLoss ? '(PREJUÍZO)' : ''}</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
-                <p><strong>${isLoss ? 'Prejuízo por pessoa:' : 'Balance por pessoa:'}</strong> ${formatNumber(balancePerPerson)} gp</p>
+                <p><strong>${isLoss ? 'Waste por pessoa:' : 'Profit por pessoa:'}</strong> ${formatNumber(balancePerPerson)} gp</p>
             `;
         }
         
@@ -1020,7 +1019,7 @@
                     
                     row.innerHTML = `
                         <td>${entry.date}</td>
-                        <td>${formatNumber(entry.totalBalance)} gp ${entry.isLoss ? '(PREJUÍZO)' : ''}</td>
+                        <td>${formatNumber(entry.totalBalance)} gp ${entry.isLoss ? '(WASTE)' : ''}</td>
                         <td>${entry.numPeople}</td>
                         <td>
                             <button onclick="viewHistoryEntry('${entry.id}')" class="small-btn">Ver</button>
@@ -1126,38 +1125,25 @@
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
         
-        function copyToClipboard(element) {
-            const text = element.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = element.textContent;
-                element.textContent = "Copiado!";
-                element.style.backgroundColor = "#d4edda";
-                element.style.color = "#155724";
-                setTimeout(() => {
-                    element.textContent = originalText;
-                    element.style.backgroundColor = "#f9ebea";
-                    element.style.color = "#e74c3c";
-                }, 1000);
-            }).catch(err => {
-                console.error('Erro ao copiar texto: ', err);
-            });
-        }
-
-        // Atualiza a tabela quando a tela for redimensionada
-        window.addEventListener('resize', function() {
-            if (document.getElementById('playersTableContainer').style.display !== 'none') {
-                displayPlayersTable();
-            }
-        });
         function copyAllTransfers() {
     const transfers = document.querySelectorAll('.transfer');
-    let fullText = "Transferências necessárias:\n";
+    let fullText = "Transfers:\n\n";
     
     transfers.forEach(transfer => {
-        const lines = transfer.textContent.split('\n');
-        fullText += lines[0].trim() + '\n'; // Linha descritiva
-        fullText += lines[1].trim() + '\n\n'; // Comando transfer
+        const description = transfer.querySelector('div').textContent
+            .replace(/transfer ([\d.]+)/, (_, num) => `transfer ${num.replace(/\./g, '')}`);
+        const command = transfer.querySelector('.transfer-command').textContent;
+        
+        fullText += `${description}\n${command}\n\n`;
     });
+
+    const summaryText = document.getElementById('summary').textContent;
+    const balanceMatch = summaryText.match(/Profit por pessoa:.*?([\d.]+)/);
+    
+    if (balanceMatch) {
+        const rawBalance = balanceMatch[1].replace(/\./g, '');
+        fullText += `Profit por pessoa: ${rawBalance} gp`;
+    }
 
     navigator.clipboard.writeText(fullText.trim()).then(() => {
         const btn = document.querySelector('.copy-all-btn');
@@ -1167,12 +1153,12 @@
         
         setTimeout(() => {
             btn.textContent = originalText;
-            btn.style.backgroundColor = let(--transfer-border);
+            btn.style.backgroundColor = '#155724';
         }, 2000);
     }).catch(err => {
         console.error('Erro ao copiar:', err);
     });
-}
-    </script>
+}   
+</script>
 </body>
 </html>
