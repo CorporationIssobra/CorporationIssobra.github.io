@@ -435,6 +435,14 @@
             width: 100%;
             font-size: 1em;
         }
+        .transfer.copied {
+    background-color: var(--transfer-border) !important;
+    transition: background-color 0.3s ease;
+}
+
+.transfer {
+    transition: background-color 0.3s ease; /* Adiciona transição suave */
+}
 
 .copy-all-btn:hover {
     background-color: #309797;
@@ -913,6 +921,21 @@
                 console.error(error);
             }
         }
+        function copyToClipboard(element) {
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                // Adiciona efeito visual
+                const transferDiv = element.closest('.transfer');
+                transferDiv.classList.add('copied');
+                
+                setTimeout(() => {
+                    transferDiv.classList.remove('copied');
+                }, 1000);
+                
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+            });
+        }
 
         function displayResults(transfers, totalBalance, numPeople, balancePerPerson, isLoss = false) {
             const transfersContainer = document.getElementById('transfers');
@@ -928,15 +951,20 @@
             if (transfers.length === 0) {
                 transfersContainer.innerHTML += '<p style="margin: 5px 0; font-size: 0.9em;">Nenhuma transferência necessária - o loot já está igualmente distribuído.</p>';
             } else {
-                transfers.forEach(t => {
-                    const transferDiv = document.createElement('div');
-                    transferDiv.className = 'transfer';
-                    transferDiv.innerHTML = `
-                        <div style="margin-bottom: 3px;">${t.from}</div>
-                        <span class="transfer-command" onclick="copyToClipboard(this)">transfer ${t.amount} to ${t.to}</span>
-                    `;
-                    transfersContainer.appendChild(transferDiv);
-                });
+// Dentro da função displayResults, modifique a criação das transfers:
+            transfers.forEach(t => {
+                const transferDiv = document.createElement('div');
+                transferDiv.className = 'transfer';
+                transferDiv.innerHTML = `
+                    <div style="margin-bottom: 3px;">${t.from}</div>
+                    <span class="transfer-command">transfer ${formatNumber(t.amount)} to ${t.to}</span>
+                `;
+                
+                // Adiciona o evento de clique à div inteira
+                transferDiv.onclick = () => copyToClipboard(transferDiv.querySelector('.transfer-command'));
+                
+                transfersContainer.appendChild(transferDiv);
+            });
             }
             
             const totalProfit = players.reduce((sum, p) => sum + (p.profit || 0), 0);
