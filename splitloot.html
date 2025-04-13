@@ -436,12 +436,12 @@
             font-size: 1em;
         }
         .transfer.copied {
-    background-color: var(--transfer-border) !important;
+    background-color: #8B0000 !important;
     transition: background-color 0.3s ease;
 }
 
 .transfer {
-    transition: background-color 0.3s ease; /* Adiciona transição suave */
+    transition: background-color 0.3s ease;
 }
 
 .copy-all-btn:hover {
@@ -580,11 +580,10 @@
         }
         
         function parseData() {
-            const data = document.getElementById('sessionData').value;
-            if (!data.trim()) {
-                alert("Por favor, cole os dados da sessão");
-                return;
-            }
+        copiedTransfers.clear();
+        document.querySelectorAll('.transfer.copied').forEach(div => {
+            div.classList.remove('copied');
+        });
 
             try {
                 // Parse dos jogadores e seus balances
@@ -921,17 +920,13 @@
                 console.error(error);
             }
         }
-        function copyToClipboard(element) {
-            const text = element.textContent;
+
+                function copyToClipboard(element) {
+            const text = element.textContent.replace(/\./g, '');
             navigator.clipboard.writeText(text).then(() => {
-                // Adiciona efeito visual
                 const transferDiv = element.closest('.transfer');
                 transferDiv.classList.add('copied');
-                
-                setTimeout(() => {
-                    transferDiv.classList.remove('copied');
-                }, 1000);
-                
+                copiedTransfers.add(transferDiv);
             }).catch(err => {
                 console.error('Erro ao copiar:', err);
             });
