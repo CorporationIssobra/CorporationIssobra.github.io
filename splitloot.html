@@ -957,7 +957,7 @@
                 transferDiv.className = 'transfer';
                 transferDiv.innerHTML = `
                     <div style="margin-bottom: 3px;">${t.from}</div>
-                    <span class="transfer-command">transfer ${formatNumber(t.amount)} to ${t.to}</span>
+                    <span class="transfer-command">transfer ${t.amount} to ${t.to}</span> <!-- Removido formatNumber() -->
                 `;
                 
                 // Adiciona o evento de clique à div inteira
