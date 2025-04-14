@@ -1149,25 +1149,32 @@
         
         function copyAllTransfers() {
     const transfers = document.querySelectorAll('.transfer');
-    let fullText = "Transfers:\n\n";
-    
+    const activePlayers = players.filter(p => p.active);
+    const totalProfit = players.reduce((sum, p) => sum + (p.profit || 0), 0);
+    const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
+    const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
+    const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
+
+    let fullText = `══════════════ Transfers ══════════════\n\n`;
+
+    // Adiciona transfers no formato solicitado
     transfers.forEach(transfer => {
-        const description = transfer.querySelector('div').textContent
-            .replace(/transfer ([\d.]+)/, (_, num) => `transfer ${num.replace(/\./g, '')}`);
-        const command = transfer.querySelector('.transfer-command').textContent;
-        
-        fullText += `${description}\n${command}\n\n`;
+        const from = transfer.querySelector('div').textContent;
+        const command = transfer.querySelector('.transfer-command').textContent
+            .replace(/\./g, ''); // Remove pontos do valor
+        fullText += `${from}\n${command}\n\n`;
     });
 
-    const summaryText = document.getElementById('summary').textContent;
-    const balanceMatch = summaryText.match(/Profit por pessoa:.*?([\d.]+)/);
-    
-    if (balanceMatch) {
-        const rawBalance = balanceMatch[1].replace(/\./g, '');
-        fullText += `Profit por pessoa: ${rawBalance} gp`;
-    }
+    // Adiciona seção de dados
+    fullText += `══════════════ Dados da Hunt ══════════════\n\n` +
+               `Data e hora: ${new Date().toLocaleString()}\n` +
+               `Membros ativos: ${activePlayers.length}\n` +
+               `Profit extra: ${totalProfit}\n` +
+               `Waste extra: ${totalWaste}\n` +
+               `Balance total: ${totalBalance}\n` +
+               `Balance por pessoa: ${balancePerPerson}`;
 
-    navigator.clipboard.writeText(fullText.trim()).then(() => {
+    navigator.clipboard.writeText(fullText).then(() => {
         const btn = document.querySelector('.copy-all-btn');
         const originalText = btn.textContent;
         btn.textContent = "Copiado!";
@@ -1180,7 +1187,7 @@
     }).catch(err => {
         console.error('Erro ao copiar:', err);
     });
-}   
+}
 </script>
 </body>
     
