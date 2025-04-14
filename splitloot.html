@@ -968,7 +968,7 @@
             const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
             
             summaryContainer.innerHTML = `
-                <p><strong>Profit:</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
+                <p><strong>${isLoss ? 'Waste da pt:' : 'Profit da pt:'}</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
                 <p><strong>Profit extra (+):</strong> ${formatNumber(totalProfit)} gp</p>
                 <p><strong>Waste extra(-):</strong> ${formatNumber(totalWaste)} gp</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
@@ -1157,11 +1157,11 @@
             const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
             
             // Cálculos principais
-            const netResult = totalBalance + totalWaste - totalProfit;
+            const netResult = totalBalance + totalProfit - totalWaste;
             const isProfit = netResult >= 0;
             const resultPerPerson = Math.floor(Math.abs(netResult) / activePlayers.length);
 
-            let fullText = `══════════════ Transfers ══════════════\n\n`;
+            let fullText = `══════════ Transfers ══════════\n\n`;
 
             transfers.forEach(transfer => {
                 const from = transfer.querySelector('div').textContent;
@@ -1171,11 +1171,12 @@
             });
 
             // Seção de dados na ordem solicitada
-            fullText += `══════════════ Dados da Hunt ══════════════\n\n` +
+            fullText += `══════════ Dados da Hunt ══════════\n\n` +
                     `Data e hora: ${new Date().toLocaleString()}\n` +
                     `${isProfit ? 'Profit total: ' : 'Waste total: '}${formatNumber(Math.abs(netResult))} gp\n` +
                     `Profit extra (+): ${formatNumber(totalProfit)} gp\n` +
                     `Waste extra (-): ${formatNumber(totalWaste)} gp\n` +
+                    `Saldo da Hunt ${isProfit ? 'Profit de: ' : 'Waste de: '} ${formatNumber(netResult)} gp\n` +
                     `Número total de players: ${activePlayers.length}\n` +
                     `${isProfit ? 'Profit por pessoa: ' : 'Waste por pessoa: '}${formatNumber(resultPerPerson)} gp\n`;
 
