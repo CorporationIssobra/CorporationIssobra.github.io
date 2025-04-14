@@ -542,8 +542,9 @@
     </div>
 
     <script>
-        let players = [];
-        let currentCalculationId = null;
+    let players = [];
+    let currentCalculationId = null;
+    let copiedTransfers = new Set(); 
         
         // Ao carregar a página, carrega o histórico e o tema salvo
         document.addEventListener('DOMContentLoaded', function() {
@@ -580,10 +581,11 @@
         }
         
         function parseData() {
-        copiedTransfers.clear();
-        document.querySelectorAll('.transfer.copied').forEach(div => {
-            div.classList.remove('copied');
-        });
+            const data = document.getElementById('sessionData').value; // Corrigido: obtém o valor do textarea
+            copiedTransfers.clear();
+            document.querySelectorAll('.transfer.copied').forEach(div => {
+                div.classList.remove('copied');
+            });
 
             try {
                 // Parse dos jogadores e seus balances
@@ -1148,45 +1150,48 @@
         }
         
         function copyAllTransfers() {
-    const transfers = document.querySelectorAll('.transfer');
-    const activePlayers = players.filter(p => p.active);
-    const totalProfit = players.reduce((sum, p) => sum + (p.profit || 0), 0);
-    const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
-    const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
-    const balancePerPerson = Math.floor(totalBalance / activePlayers.length);
+            const transfers = document.querySelectorAll('.transfer');
+            const activePlayers = players.filter(p => p.active);
+            const totalProfit = players.reduce((sum, p) => sum + (p.profit || 0), 0);
+            const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
+            const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
+            
+            // Cálculos principais
+            const netResult = totalBalance + totalWaste - totalProfit;
+            const isProfit = netResult >= 0;
+            const resultPerPerson = Math.floor(Math.abs(netResult) / activePlayers.length);
 
-    let fullText = `══════════════ Transfers ══════════════\n\n`;
+            let fullText = `══════════════ Transfers ══════════════\n\n`;
 
-    // Adiciona transfers no formato solicitado
-    transfers.forEach(transfer => {
-        const from = transfer.querySelector('div').textContent;
-        const command = transfer.querySelector('.transfer-command').textContent
-            .replace(/\./g, ''); // Remove pontos do valor
-        fullText += `${from}\n${command}\n\n`;
-    });
+            transfers.forEach(transfer => {
+                const from = transfer.querySelector('div').textContent;
+                const command = transfer.querySelector('.transfer-command').textContent
+                    .replace(/\./g, '');
+                fullText += `${from}\n${command}\n\n`;
+            });
 
-    // Adiciona seção de dados
-    fullText += `══════════════ Dados da Hunt ══════════════\n\n` +
-               `Data e hora: ${new Date().toLocaleString()}\n` +
-               `Membros ativos: ${activePlayers.length}\n` +
-               `Profit extra: ${totalProfit}\n` +
-               `Waste extra: ${totalWaste}\n` +
-               `Balance total: ${totalBalance}\n` +
-               `Balance por pessoa: ${balancePerPerson}`;
+            // Seção de dados na ordem solicitada
+            fullText += `══════════════ Dados da Hunt ══════════════\n\n` +
+                    `Data e hora: ${new Date().toLocaleString()}\n` +
+                    `${isProfit ? 'Profit total: ' : 'Waste total: '}${formatNumber(Math.abs(netResult))} gp\n` +
+                    `Profit extra (+): ${formatNumber(totalProfit)} gp\n` +
+                    `Waste extra (-): ${formatNumber(totalWaste)} gp\n` +
+                    `Número total de players: ${activePlayers.length}\n` +
+                    `${isProfit ? 'Profit por pessoa: ' : 'Waste por pessoa: '}${formatNumber(resultPerPerson)} gp\n`;
 
-    navigator.clipboard.writeText(fullText).then(() => {
-        const btn = document.querySelector('.copy-all-btn');
-        const originalText = btn.textContent;
-        btn.textContent = "Copiado!";
-        btn.style.backgroundColor = '#2ecc71';
-        
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.backgroundColor = '#155724';
-        }, 2000);
-    }).catch(err => {
-        console.error('Erro ao copiar:', err);
-    });
+            navigator.clipboard.writeText(fullText).then(() => {
+                const btn = document.querySelector('.copy-all-btn');
+                const originalText = btn.textContent;
+                btn.textContent = "Copiado!";
+                btn.style.backgroundColor = '#2ecc71';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.backgroundColor = '#155724';
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+            });
 }
 </script>
 </body>
