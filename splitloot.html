@@ -968,7 +968,7 @@
             const totalWaste = players.reduce((sum, p) => sum + (p.waste || 0), 0);
             
             summaryContainer.innerHTML = `
-                <p><strong>${isLoss ? 'Waste da pt:' : 'Profit da pt:'}</strong> ${formatNumber(totalBalance + totalWaste - totalProfit)} gp</p>
+                <p><strong>${isLoss ? 'Waste da pt:' : 'Profit da pt:'}</strong> ${formatNumber(totalBalance)} gp</p>
                 <p><strong>Profit extra (+):</strong> ${formatNumber(totalProfit)} gp</p>
                 <p><strong>Waste extra(-):</strong> ${formatNumber(totalWaste)} gp</p>
                 <p><strong>Pessoas na party:</strong> ${numPeople}</p>
@@ -1176,7 +1176,7 @@
                     `${isProfit ? 'Profit total: ' : 'Waste total: '}${formatNumber(Math.abs(netResult))} gp\n` +
                     `Profit extra (+): ${formatNumber(totalProfit)} gp\n` +
                     `Waste extra (-): ${formatNumber(totalWaste)} gp\n` +
-                    `Saldo da Hunt ${isProfit ? 'Profit de: ' : 'Waste de: '} ${formatNumber(netResult)} gp\n` +
+                    `Saldo ${isProfit ? 'profit de: ' : 'waste de: '} ${formatNumber(netResult)} gp\n` +
                     `Número total de players: ${activePlayers.length}\n` +
                     `${isProfit ? 'Profit por pessoa: ' : 'Waste por pessoa: '}${formatNumber(resultPerPerson)} gp\n`;
 
