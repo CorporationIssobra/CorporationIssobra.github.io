@@ -1,422 +1,134 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversor de Tibia Coin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Corporation Issobra</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
-        :root {
-            --bg-color: #f5f5f5;
-            --text-color: #333;
-            --panel-bg: white;
-            --panel-shadow: rgba(0,0,0,0.1);
-            --primary-color: #2c3e50;
-            --primary-border: #3498db;
-            --secondary-bg: #f0f7ff;
-            --button-bg: #3498db;
-            --button-hover: #2980b9;
-            --input-border: #ddd;
-            --input-focus: #3498db;
-            --hr-color: #eee;
-            --gold-color: #FFD700;
-            --tc-color: #4CAF50;
-            --money-color: #2ECC71;
-        }
-
-        .dark-mode {
-            --bg-color: #1a1a1a;
-            --text-color: #e0e0e0;
-            --panel-bg: #2d2d2d;
-            --panel-shadow: rgba(0,0,0,0.3);
-            --primary-color: #3498db;
-            --primary-border: #2980b9;
-            --secondary-bg: #1e3a5f;
-            --input-border: #444;
-            --input-focus: #2980b9;
-            --hr-color: #444;
-            --gold-color: #FFD700;
-            --tc-color: #4CAF50;
-            --money-color: #2ECC71;
-        }
-
+        /* Estilos gerais */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 10px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-            font-size: 14px;
-        }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        .panel {
-            background-color: var(--panel-bg);
-            border-radius: 8px;
-            box-shadow: 0 2px 8px var(--panel-shadow);
-            padding: 15px;
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-        
-        h1 {
+            padding: 0;
             text-align: center;
-            color: var(--primary-color);
-            margin: 0 0 15px 0;
-            font-size: 1.4em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            background-color: #333;
         }
-        
-        .instructions {
-            font-size: 0.85em;
-            color: var(--text-color);
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: var(--secondary-bg);
-            border-radius: 5px;
-            border-left: 3px solid var(--primary-border);
-        }
-        
-        .input-group {
-            margin-bottom: 12px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        
-        .input-icon {
-            position: absolute;
-            left: 10px;
-            color: var(--text-color);
-            opacity: 0.7;
-        }
-        
-        input[type="number"] {
-            width: 100%;
-            padding: 8px 8px 8px 32px;
-            border: 1px solid var(--input-border);
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 0.95em;
-            background-color: var(--panel-bg);
-            color: var(--text-color);
-            transition: all 0.3s;
-        }
-        
-        input[type="number"]:focus {
-            outline: none;
-            border-color: var(--input-focus);
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-        
-        .fixed-value {
-            background-color: var(--secondary-bg);
-            padding: 8px;
-            border-radius: 4px;
+
+        /* Estilo do banner */
+        #banner {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
-        
-        hr {
-            border: 0;
-            height: 1px;
-            background-color: var(--hr-color);
-            margin: 15px 0;
+
+        /* Estilo do menu */
+        #menu {
+            background-color: #333;
+            overflow: hidden;
         }
-        
-        .conversion-results {
-            margin-top: 15px;
+
+        #menu a {
+            float: left;
+            display: block;
+            color: white;
+            padding: 14px 20px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
         }
-        
-        .result-item {
-            margin-bottom: 12px;
+
+        #menu a:hover {
+            background-color: #ddd;
+            color: black;
         }
-        
-        .gold { color: var(--gold-color); }
-        .tc { color: var(--tc-color); }
-        .money { color: var(--money-color); }
-        
-        /* Toggle switch para tema escuro/claro */
-        .theme-switch {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 100;
-        }
-        
-        .theme-switch label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            color: var(--text-color);
-            font-size: 0.9em;
-        }
-        
-        .switch {
+
+        /* Estilo do contêiner responsivo para o iframe com margens */
+        .iframe-container {
             position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 25px;
+            width: 100vw; /* O iframe ocupará no máximo 90% da largura da tela */
+            height: 100vh; /* O iframe ocupará no máximo 70% da altura da tela */
+            margin: 0 auto;
+            border: 5px solid #4CAF50;
+            border-radius: 10px;
+            overflow: hidden;
         }
-        
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
+
+        /* Estilo do iframe */
+        iframe {
             position: absolute;
-            cursor: pointer;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 25px;
+            width: 100%;
+            height: 100%;
+            border: none;
         }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 19px;
-            width: 19px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(25px);
-        }
-        
-        @media (max-width: 480px) {
-            body {
-                padding: 8px;
-                font-size: 13px;
+
+        /* Responsividade para dispositivos móveis */
+        @media screen and (max-width: 768px) {
+            #banner {
+                font-size: 20px;
+                padding: 15px;
             }
-            
-            .panel {
-                padding: 12px;
+
+            #menu a {
+                font-size: 16px;
+                padding: 12px 15px;
             }
-            
-            h1 {
-                font-size: 1.3em;
-            }
-            
-            input[type="number"] {
-                padding: 7px 7px 7px 28px;
-                font-size: 0.9em;
-            }
-            
-            .input-icon {
-                font-size: 0.9em;
-                left: 8px;
-            }
-            
-            .theme-switch {
-                top: 8px;
-                right: 8px;
-            }
-            
-            .switch {
-                width: 45px;
-                height: 22px;
-            }
-            
-            .slider:before {
-                height: 16px;
-                width: 16px;
+
+            .iframe-container {
+                width: 100vw; /* A largura continua 90% da tela */
+                height: 70vh; /* A altura será ajustada para 60% da tela em dispositivos móveis */
             }
         }
     </style>
 </head>
 <body>
-    <!-- Toggle switch para tema escuro/claro -->
-    <div class="theme-switch">
-        <label>
-            <span id="theme-label">Modo Escuro</span>
-            <div class="switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider"></span>
-            </div>
-        </label>
+
+    <!-- Banner -->
+    <div id="banner">
+        Corporation Issobra
     </div>
-    
-    <div class="container">
-        <div class="panel">
-            <h1>
-                <i class="fas fa-coins tc"></i>
-                Conversor de Tibia Coin
-            </h1>
-            <div class="instructions">
-                <i class="fas fa-info-circle"></i> Defina a cotação atual e converta valores entre Gold Coins, Tibia Coins e Reais automaticamente.
-            </div>
 
-            <div class="input-group">
-                <label for="tcToGc"><i class="fas fa-exchange-alt"></i> Preço Tibia Coin (Market):</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-coins input-icon gold"></i>
-                    <input type="number" id="tcToGc" placeholder="Ex: 39000">
-                </div>
-            </div>
+    <!-- Menu -->
+    <div id="menu">
+        <a href="index.html">Home</a>
+        <a href="pontuacao.html">Pontuação</a>
+        <a href="planilhado.html">Planilhado</a>
+        <a href="calc.html">Calcular XP</a>
+        <a href="split.html">SplitLoot</a>
+        <a href="valor.html">Calcular Preço</a>
+    </div>
 
-            <div class="input-group">
-                <label><i class="fas fa-box-open"></i> Valor em Real:</label>
-                <div class="fixed-value">
-                    <i class="fas fa-coins tc"></i>
-                    <span>250 Tibia Coins =</span>
-                    <div class="input-wrapper" style="flex: 1; max-width: 120px;">
-                        <i class="fas fa-dollar-sign input-icon money"></i>
-                        <input type="number" id="tcReais" placeholder="Ex: 60.00" step="0.01">
-                    </div>
-                </div>
-            </div>
 
-            <hr>
-
-            <div class="conversion-results">
-                <div class="result-item">
-                    <label for="valorGC"><i class="fas fa-coins gold"></i> Valor em Gold Coin (GP):</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-coins input-icon gold"></i>
-                        <input type="number" id="valorGC" placeholder="Digite o valor em GC">
-                    </div>
-                </div>
-
-                <div class="result-item">
-                    <label for="valorTC"><i class="fas fa-coins tc"></i> Valor em Tibia Coin (TC):</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-coins input-icon tc"></i>
-                        <input type="number" id="valorTC" placeholder="Digite o valor em TC">
-                    </div>
-                </div>
-
-                <div class="result-item">
-                    <label for="valorRS"><i class="fas fa-dollar-sign money"></i> Valor em Reais (R$):</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-dollar-sign input-icon money"></i>
-                        <input type="number" id="valorRS" placeholder="Digite o valor em R$" step="0.01">
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Contêiner responsivo para o iframe -->
+    <div class="iframe-container">
+        <iframe id="planilhaIframe" src="realvalor.html" allowfullscreen></iframe>
     </div>
 
     <script>
-        // Elementos do conversor
-        const tcToGc = document.getElementById('tcToGc');
-        const tcReais = document.getElementById('tcReais');
-        const valorGC = document.getElementById('valorGC');
-        const valorTC = document.getElementById('valorTC');
-        const valorRS = document.getElementById('valorRS');
+        // Função de pesquisa
+        function pesquisar() {
+            const pesquisaTermo = document.getElementById("pesquisa").value.toLowerCase();
 
-        // Controle para evitar loop infinito nas atualizações
-        let bloqueado = false;
+            // Se o campo de pesquisa não estiver vazio, o código tenta construir a URL do iframe com a busca
+            const iframe = document.getElementById("planilhaIframe");
 
-        // Função para obter as taxas de conversão
-        function getRates() {
-            const tcToGold = parseFloat(tcToGc.value);
-            const valRS = parseFloat(tcReais.value);
-
-            if (!tcToGold || !valRS) return null;
-
-            const valor1tcReais = valRS / 250; // Fixo em 250 TC
-            return {
-                tcToGold: tcToGold,
-                tcToReal: valor1tcReais
-            };
-        }
-
-        // Função para atualizar os valores de conversão
-        function atualizarValores(origem) {
-            if (bloqueado) return;
-            const taxas = getRates();
-            if (!taxas) return;
-
-            const tcToGold = taxas.tcToGold;
-            const tcToReal = taxas.tcToReal;
-            bloqueado = true;
-
-            if (origem === 'GC') {
-                const gc = parseFloat(valorGC.value) || 0;
-                const tc = gc / tcToGold;
-                const rs = tc * tcToReal;
-                valorTC.value = tc.toFixed(2);
-                valorRS.value = rs.toFixed(2);
-            }
-
-            if (origem === 'TC') {
-                const tc = parseFloat(valorTC.value) || 0;
-                const gc = tc * tcToGold;
-                const rs = tc * tcToReal;
-                valorGC.value = Math.round(gc);
-                valorRS.value = rs.toFixed(2);
-            }
-
-            if (origem === 'RS') {
-                const rs = parseFloat(valorRS.value) || 0;
-                const tc = rs / tcToReal;
-                const gc = tc * tcToGold;
-                valorTC.value = tc.toFixed(2);
-                valorGC.value = Math.round(gc);
-            }
-
-            bloqueado = false;
-        }
-
-        // Event listeners para os campos de entrada
-        valorGC.addEventListener('input', () => atualizarValores('GC'));
-        valorTC.addEventListener('input', () => atualizarValores('TC'));
-        valorRS.addEventListener('input', () => atualizarValores('RS'));
-
-        // Toggle de tema escuro/claro
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeLabel = document.getElementById('theme-label');
-        
-        themeToggle.addEventListener('change', function() {
-            document.body.classList.toggle('dark-mode');
-            themeLabel.textContent = this.checked ? 'Modo Claro' : 'Modo Escuro';
+            // URL base para o Google Sheets
+            const baseURL = "https://docs.google.com/spreadsheets/d/1ijzXcGMG1Ed7rrJHKMLp4GvvjZZvTVo-X2xTX5eb7kk/preview";
             
-            // Salvar preferência no localStorage
-            localStorage.setItem('darkMode', this.checked);
-        });
-        
-        // Verificar preferência salva ao carregar a página
-        if (localStorage.getItem('darkMode') === 'true') {
-            themeToggle.checked = true;
-            document.body.classList.add('dark-mode');
-            themeLabel.textContent = 'Modo Claro';
+            // Modificando a URL com o termo de pesquisa, se houver
+            if (pesquisaTermo) {
+                // Você pode tentar direcionar para uma aba específica ou usar filtros no Google Sheets
+                iframe.src = `${baseURL}?gid=1523329092#search=${pesquisaTermo}`;
+            } else {
+                iframe.src = baseURL; // Se não houver pesquisa, apenas exibe a planilha geral
+            }
         }
     </script>
+
 </body>
 </html>
